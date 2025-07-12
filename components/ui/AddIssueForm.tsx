@@ -1,59 +1,57 @@
 "use client"
 
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
+import { Issue } from "@/lib/types"
 
-export function AddIssueForm() {
-  const [visible, setVisible] = useState(false)
+export function AddIssueForm({ onAdd }: { onAdd: (newIssue: Issue) => void }) {
   const [form, setForm] = useState({
     title: "",
     priority: "low",
     status: "open",
   })
 
-  const handleSubmit = () => {
-    console.log("New Issue Submitted:", form)
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!form.title.trim()) return
+    const newIssue = {
+      ...form,
+      id: Date.now(),
+      status: form.status as "open" | "in_progress" | "closed",
+      priority: form.priority as "low" | "medium" | "high"
+    };
+    onAdd(newIssue)
     setForm({ title: "", priority: "low", status: "open" })
-    setVisible(false)
   }
 
   return (
-    <div className="mb-6">
-      <Button onClick={() => setVisible(!visible)}>+ Add Issue</Button>
-
-      {visible && (
-        <div className="mt-4 space-y-3 border p-4 rounded bg-gray-50">
-          <input
-            type="text"
-            placeholder="Issue Title"
-            value={form.title}
-            onChange={(e) => setForm({ ...form, title: e.target.value })}
-            className="border w-full px-3 py-1 rounded"
-          />
-
-          <select
-            value={form.priority}
-            onChange={(e) => setForm({ ...form, priority: e.target.value })}
-            className="border w-full px-3 py-1 rounded"
-          >
-            <option value="low">Low</option>
-            <option value="medium">Medium</option>
-            <option value="high">High</option>
-          </select>
-
-          <select
-            value={form.status}
-            onChange={(e) => setForm({ ...form, status: e.target.value })}
-            className="border w-full px-3 py-1 rounded"
-          >
-            <option value="open">Open</option>
-            <option value="in_progress">In Progress</option>
-            <option value="closed">Closed</option>
-          </select>
-
-          <Button onClick={handleSubmit}>Submit</Button>
-        </div>
-      )}
-    </div>
+    <form onSubmit={handleSubmit} className="space-y-2 mt-4">
+      <input
+        value={form.title}
+        onChange={(e) => setForm({ ...form, title: e.target.value })}
+        placeholder="Issue title"
+        className="w-full border px-3 py-1 rounded"
+      />
+      <select
+        value={form.priority}
+        onChange={(e) => setForm({ ...form, priority: e.target.value })}
+        className="w-full border px-3 py-1 rounded"
+      >
+        <option value="low">Low</option>
+        <option value="medium">Medium</option>
+        <option value="high">High</option>
+      </select>
+      <select
+        value={form.status}
+        onChange={(e) => setForm({ ...form, status: e.target.value })}
+        className="w-full border px-3 py-1 rounded"
+      >
+        <option value="open">Open</option>
+        <option value="in_progress">In Progress</option>
+        <option value="closed">Closed</option>
+      </select>
+      <button type="submit" className="bg-black text-white px-4 py-1 rounded">
+        Add
+      </button>
+    </form>
   )
 }
