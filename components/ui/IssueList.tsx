@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Issue } from "@/lib/types"
 import { dummyIssues as initialIssues } from "@/lib/data"
-import { AddIssueForm } from "./AddIssueForm"
+import AddIssueForm from './AddIssueForm';
 
 export function IssueList() {
   const [issues, setIssues] = useState<Issue[]>(initialIssues)
@@ -100,6 +100,18 @@ export function IssueList() {
               <p className="text-sm text-gray-500">
                 Status: {issue.status} | Priority: {issue.priority}
               </p>
+              {issue.tags && issue.tags.length > 0 && (
+                <div className="mt-1 flex flex-wrap gap-2 text-sm">
+                  {issue.tags.map((tag, index) => (
+                    <span
+                      key={index}
+                      className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full text-xs"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
               <div className="mt-3 flex gap-2">
                 <Button size="sm" variant="outline" onClick={() => handleEdit(issue)}>Edit</Button>
                 <Button size="sm" variant="destructive" onClick={() => handleDelete(issue.id)}>Delete</Button>
