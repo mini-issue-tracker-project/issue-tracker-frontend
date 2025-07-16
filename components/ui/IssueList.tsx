@@ -4,13 +4,16 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Issue } from "@/lib/types"
 import { dummyIssues as initialIssues } from "@/lib/data"
-import AddIssueForm from './AddIssueForm';
-import { availableTags } from "./IssueStatus";
+import AddIssueForm from './AddIssueForm'
+import { availableTags } from "./IssueStatus"
+import { IssueFilters } from "./IssueFilters"
+import { Filter } from "lucide-react"
 
 export function IssueList() {
   const [issues, setIssues] = useState<Issue[]>(initialIssues)
   const [editingId, setEditingId] = useState<number | null>(null)
   const [showAddForm, setShowAddForm] = useState(false)
+  const [showFilters, setShowFilters] = useState(false)
   const [form, setForm] = useState<{
     title: string;
     priority: "low" | "medium" | "high";
@@ -22,7 +25,6 @@ export function IssueList() {
     status: "open",
     tags: [],
   });
-  
 
   const handleEdit = (issue: Issue) => {
     setEditingId(issue.id)
@@ -60,13 +62,33 @@ export function IssueList() {
 
   return (
     <div className="space-y-4">
-      <div className="mb-4">
+      {/* Top action bar */}
+      <div className="flex justify-between items-center mb-4">
         <Button onClick={() => setShowAddForm(prev => !prev)}>
           {showAddForm ? "Cancel" : "Add New Issue"}
         </Button>
-        {showAddForm && <AddIssueForm onAdd={handleAdd} />}
+
+        {/* Filter button with icon */}
+        <Button
+          variant="outline"
+          onClick={() => setShowFilters(prev => !prev)}
+          className="flex items-center gap-1"
+        >
+          <Filter className="h-4 w-4" />
+          Filter
+        </Button>
       </div>
 
+      {showAddForm && <AddIssueForm onAdd={handleAdd} />}
+
+      {/* Filter UI */}
+      {showFilters && (
+        <div className="mb-4">
+          <IssueFilters />
+        </div>
+      )}
+
+      {/* Issues list */}
       {issues.map((issue) => (
         <div key={issue.id} className="border p-4 rounded shadow">
           {editingId === issue.id ? (
