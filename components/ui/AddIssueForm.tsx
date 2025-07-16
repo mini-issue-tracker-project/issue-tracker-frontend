@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Issue } from "@/lib/types"
-import { availableTags } from "./IssueFilters"
+import { availableTags } from "./IssueStatus"
 
 export default function AddIssueForm({ onAdd }: { onAdd: (issue: Issue) => void }) {
   const [title, setTitle] = useState("")

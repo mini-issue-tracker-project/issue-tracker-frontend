@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Issue } from "@/lib/types"
 import { dummyIssues as initialIssues } from "@/lib/data"
 import AddIssueForm from './AddIssueForm';
-import { availableTags } from "./IssueFilters";
+import { availableTags } from "./IssueStatus";
 
 export function IssueList() {
   const [issues, setIssues] = useState<Issue[]>(initialIssues)
