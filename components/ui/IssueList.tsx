@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Issue } from "@/lib/types"
 import { dummyIssues as initialIssues } from "@/lib/data"
 import AddIssueForm from './AddIssueForm'
-import { availableTags } from "./IssueStatus"
+import { availableTags } from "@/lib/types"
 import { IssueFilters } from "./IssueFilters"
 import { Filter } from "lucide-react"
 
@@ -16,11 +16,13 @@ export function IssueList() {
   const [showFilters, setShowFilters] = useState(false)
   const [form, setForm] = useState<{
     title: string;
+    author: string;
     priority: "low" | "medium" | "high";
     status: "open" | "in_progress" | "closed";
     tags: string[];
   }>({
     title: "",
+    author: "",
     priority: "low",
     status: "open",
     tags: [],
@@ -30,6 +32,7 @@ export function IssueList() {
     setEditingId(issue.id)
     setForm({
       title: issue.title,
+      author: issue.author,
       priority: issue.priority,
       status: issue.status,
       tags: issue.tags || [],
@@ -97,11 +100,19 @@ export function IssueList() {
                 value={form.title}
                 onChange={(e) => setForm({ ...form, title: e.target.value })}
                 className="w-full border px-3 py-1 rounded"
+                placeholder="Title"
+              />
+              <input
+                value={form.author}
+                onChange={(e) => setForm({ ...form, author: e.target.value })}
+                className="w-full border px-3 py-1 rounded"
+                placeholder="Author"
               />
               <select
                 value={form.priority}
                 onChange={(e) => setForm({ ...form, priority: e.target.value as any })}
                 className="w-full border px-3 py-1 rounded"
+
               >
                 <option value="low">Low</option>
                 <option value="medium">Medium</option>
@@ -148,7 +159,7 @@ export function IssueList() {
             <>
               <h3 className="font-semibold text-lg">{issue.title}</h3>
               <p className="text-sm text-gray-500">
-                Status: {issue.status} | Priority: {issue.priority}
+                Author: {issue.author} | Status: {issue.status} | Priority: {issue.priority}
               </p>
               {issue.tags && issue.tags.length > 0 && (
                 <div className="mt-1 flex flex-wrap gap-2 text-sm">

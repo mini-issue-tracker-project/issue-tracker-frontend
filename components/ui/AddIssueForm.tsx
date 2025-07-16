@@ -3,10 +3,11 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Issue } from "@/lib/types"
-import { availableTags } from "./IssueStatus"
+import { availableTags } from "@/lib/types"
 
 export default function AddIssueForm({ onAdd }: { onAdd: (issue: Issue) => void }) {
   const [title, setTitle] = useState("")
+  const [author, setAuthor] = useState("")
   const [priority, setPriority] = useState<"low" | "medium" | "high">("low")
   const [status, setStatus] = useState<"open" | "in_progress" | "closed">("open")
   const [tags, setTags] = useState<string[]>([])
@@ -20,8 +21,9 @@ export default function AddIssueForm({ onAdd }: { onAdd: (issue: Issue) => void 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!title.trim()) return
-    onAdd({ id: 0, title, priority, status, tags })
+    onAdd({ id: 0, title, author, priority, status, tags })
     setTitle("")
+    setAuthor("")
     setPriority("low")
     setStatus("open")
     setTags([])
@@ -34,6 +36,13 @@ export default function AddIssueForm({ onAdd }: { onAdd: (issue: Issue) => void 
         onChange={(e) => setTitle(e.target.value)}
         className="w-full border px-3 py-1 rounded"
         placeholder="Issue title"
+      />
+
+      <input
+        value={author}
+        onChange={(e) => setAuthor(e.target.value)}
+        className="w-full border px-3 py-1 rounded"
+        placeholder="Author"
       />
 
       <select

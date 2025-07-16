@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { availableTags } from "./IssueStatus"
+import { availableTags } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 
 export function IssueFilters({ onFilterApply }: { onFilterApply: () => void }) {
