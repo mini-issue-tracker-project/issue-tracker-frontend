@@ -4,7 +4,7 @@ import { useState } from "react"
 import { availableTags } from "./IssueStatus"
 import { Button } from "@/components/ui/button"
 
-export function IssueFilters() {
+export function IssueFilters({ onFilterApply }: { onFilterApply: () => void }) {
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [selectedLogic, setSelectedLogic] = useState<"AND" | "OR">("AND")
 
@@ -16,6 +16,7 @@ export function IssueFilters() {
 
   const handleFilter = () => {
     console.log("Filter applied with:", selectedTags, selectedLogic)
+    onFilterApply();
     // later, you can hook this to real filtering logic
   }
 

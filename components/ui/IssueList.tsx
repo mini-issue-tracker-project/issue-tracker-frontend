@@ -84,7 +84,7 @@ export function IssueList() {
       {/* Filter UI */}
       {showFilters && (
         <div className="mb-4">
-          <IssueFilters />
+          <IssueFilters onFilterApply={() => setShowFilters(false)} />
         </div>
       )}
 
