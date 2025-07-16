@@ -5,6 +5,7 @@ export type Issue = {
     status: "open" | "in_progress" | "closed"
     priority: "low" | "medium" | "high"
     tags: string[]
+    description: string
   }
 
 export const availableTags = ["ui", "bug", "feature", "enhancement", "documentation"];

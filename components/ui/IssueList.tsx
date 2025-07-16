@@ -8,6 +8,7 @@ import AddIssueForm from './AddIssueForm'
 import { availableTags } from "@/lib/types"
 import { IssueFilters } from "./IssueFilters"
 import { Filter } from "lucide-react"
+import Link from "next/link"
 
 export function IssueList() {
   const [issues, setIssues] = useState<Issue[]>(initialIssues)
@@ -157,7 +158,9 @@ export function IssueList() {
             </div>
           ) : (
             <>
-              <h3 className="font-semibold text-lg">{issue.title}</h3>
+              <Link href={`/issues/${issue.id}`}>
+                <h3 className="font-semibold text-lg cursor-pointer hover:underline">{issue.title}</h3>
+              </Link>
               <p className="text-sm text-gray-500">
                 Author: {issue.author} | Status: {issue.status} | Priority: {issue.priority}
               </p>

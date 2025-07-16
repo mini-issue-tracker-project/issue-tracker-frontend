@@ -7,7 +7,8 @@ export const dummyIssues: Issue[] = [
     author: "John Doe",
     status: "open",
     priority: "high",
-    tags: ["bug", "enhancement"]
+    tags: ["bug", "enhancement"],
+    description: "The login page is not responsive on mobile devices."
   },
   {
     id: 2,
@@ -15,7 +16,8 @@ export const dummyIssues: Issue[] = [
     author: "Jane Smith",
     status: "in_progress",
     priority: "medium",
-    tags: ["feature", "ui"]
+    tags: ["feature", "ui"],
+    description: "Add dark mode support to the application."
   },
   {
     id: 3,
@@ -23,6 +25,7 @@ export const dummyIssues: Issue[] = [
     author: "John Doe",
     status: "closed",
     priority: "low",
-    tags: ["bug", "documentation"]
+    tags: ["bug", "documentation"],
+    description: "Fix the typo in the About page."
   }
 ];
