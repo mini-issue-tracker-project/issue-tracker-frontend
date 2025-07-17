@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Textarea } from "./textarea";
-import { Button } from "./button";
+import { Textarea } from "./Textarea";
+import { Button } from "./Button";
 
 function CommentSection({
   comments,

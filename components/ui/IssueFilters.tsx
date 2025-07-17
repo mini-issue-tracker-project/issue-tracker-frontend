@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { availableTags } from "@/lib/types"
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/Button"
 
 export function IssueFilters({ onFilterApply }: { onFilterApply: () => void }) {
   const [selectedTags, setSelectedTags] = useState<{ id: number; name: string }[]>([])

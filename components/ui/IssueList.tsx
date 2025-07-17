@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/Button"
 import { Issue } from "@/lib/types"
 import { dummyIssues as initialIssues } from "@/lib/data"
 import AddIssueForm from './AddIssueForm'
