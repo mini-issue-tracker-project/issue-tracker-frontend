@@ -6,6 +6,7 @@ export type Issue = {
     priority: "low" | "medium" | "high"
     tags: { id: number; name: string }[]
     description: string
+    comments: { id: number; author: string; content: string }[]
   }
 
   export const availableTags = [

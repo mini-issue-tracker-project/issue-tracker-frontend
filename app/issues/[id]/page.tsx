@@ -31,6 +31,16 @@ export default function IssueDetailPage() {
           {issue.description || "No description provided."}
         </p>
       </div>
+      <div className="mt-4">
+        <h2 className="font-semibold">Comments</h2>
+        <ul className="space-y-2">
+          {issue.comments.map(comment => (
+            <li key={comment.id} className="text-sm text-gray-700">
+              <strong>{comment.author}:</strong> {comment.content}
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }

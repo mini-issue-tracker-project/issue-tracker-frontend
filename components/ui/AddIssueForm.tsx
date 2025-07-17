@@ -21,7 +21,7 @@ export default function AddIssueForm({ onAdd }: { onAdd: (issue: Issue) => void 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!title.trim()) return
-    onAdd({ id: 0, title, author, priority, status, tags, description: "" })
+    onAdd({ id: 0, title, author, priority, status, tags, description: "", comments: [] })
     setTitle("")
     setAuthor("")
     setPriority("low")
