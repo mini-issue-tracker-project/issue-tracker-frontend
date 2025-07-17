@@ -1,21 +1,60 @@
 "use client"
 
+import { useState } from "react"
+import { availableTags } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 
-export const availableTags = ["ui", "bug", "feature", "enhancement", "documentation"];
+export function IssueFilters({ onFilterApply }: { onFilterApply: () => void }) {
+  const [selectedTags, setSelectedTags] = useState<{ id: number; name: string }[]>([])
+  const [selectedLogic, setSelectedLogic] = useState<"AND" | "OR">("AND")
 
-export function IssueFilters() {
+  const toggleTag = (tag: { id: number; name: string }) => {
+    setSelectedTags(prev =>
+      prev.some(t => t.id === tag.id) ? prev.filter(t => t.id !== tag.id) : [...prev, tag]
+    )
+  }
+
+  const handleFilter = () => {
+    console.log("Filter applied with:", selectedTags, selectedLogic)
+    onFilterApply();
+    // later, you can hook this to real filtering logic
+  }
+
   return (
-    <div className="flex flex-wrap gap-2 mb-4">
-      <span className="text-sm text-gray-600 mr-2">Filter by status:</span>
-      <Button variant="outline">Open</Button>
-      <Button variant="outline">In Progress</Button>
-      <Button variant="outline">Closed</Button>
+    <div className="space-y-4 border p-4 rounded-md shadow-sm">
+      <div>
+        <label className="text-sm font-semibold">Tags</label>
+        <div className="flex flex-wrap gap-2 mt-1">
+          {availableTags.map(tag => (
+            <button
+              key={tag.id}
+              type="button"
+              className={`px-3 py-1 border rounded-full text-sm ${
+                selectedTags.some(t => t.id === tag.id)
+                  ? "bg-blue-500 text-white"
+                  : "bg-gray-200 text-gray-800"
+              }`}
+              onClick={() => toggleTag(tag)}
+            >
+              {tag.name}
+            </button>
+          ))}
+        </div>
+      </div>
 
-      <span className="ml-6 text-sm text-gray-600 mr-2">Priority:</span>
-      <Button variant="outline">Low</Button>
-      <Button variant="outline">Medium</Button>
-      <Button variant="outline">High</Button>
+      <div className="flex items-center gap-4">
+        <label className="text-sm font-semibold">Logic:</label>
+        <select
+          value={selectedLogic}
+          onChange={(e) => setSelectedLogic(e.target.value as "AND" | "OR")}
+          className="border px-2 py-1 rounded"
+        >
+          <option value="AND">AND</option>
+          <option value="OR">OR</option>
+        </select>
+      </div>
+
+      <Button onClick={handleFilter}>Apply Filter</Button>
     </div>
   )
 }

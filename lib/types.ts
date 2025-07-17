@@ -1,8 +1,18 @@
 export type Issue = {
     id: number
     title: string
+    author: string
     status: "open" | "in_progress" | "closed"
     priority: "low" | "medium" | "high"
-    tags?: string[]
+    tags: { id: number; name: string }[]
+    description: string
   }
+
+  export const availableTags = [
+    { id: 1, name: "ui" },
+    { id: 2, name: "bug" },
+    { id: 3, name: "feature" },
+    { id: 4, name: "enhancement" },
+    { id: 5, name: "documentation" },
+  ];
   

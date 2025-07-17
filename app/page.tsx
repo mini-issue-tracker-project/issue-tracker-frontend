@@ -1,6 +1,5 @@
 "use client";
 
-import { AddIssueForm } from "@/components/ui/AddIssueForm"
 import { IssueList } from "@/components/ui/IssueList"
 
 export default function Home() {
