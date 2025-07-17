@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Textarea } from "./Textarea";
 import { Button } from "./Button";
+import { Image } from "@/lib/types";
 
 function CommentSection({
   comments,
@@ -17,9 +18,11 @@ function CommentSection({
   handleDeleteComment,
   startEdit,
   handleEditSave,
+  attachedFiles,
+  setAttachedFiles,
 }: {
-  comments: Array<{ id: number; author: string; content: string }>;
-  setComments: (comments: Array<{ id: number; author: string; content: string }>) => void;
+  comments: Array<{ id: number; author: string; content: string; images: Image[] }>;
+  setComments: (comments: Array<{ id: number; author: string; content: string; images: Image[] }>) => void;
   editingId: number | null;
   setEditingId: (id: number | null) => void;
   editContent: string;
@@ -32,7 +35,21 @@ function CommentSection({
   handleDeleteComment: (id: number) => void;
   startEdit: (id: number, currentContent: string) => void;
   handleEditSave: () => void;
+  attachedFiles: File[];
+  setAttachedFiles: (files: File[]) => void;
 }) {
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const files = Array.from(e.dataTransfer.files);
+    // Sadece görselleri alalım
+    const imageFiles = files.filter(file => file.type.startsWith('image/'));
+    setAttachedFiles([...attachedFiles, ...imageFiles]);
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+  };
+
   return (
     <div className="mt-4 border-t pt-4">
       <div className="flex justify-between items-center mb-4">
@@ -52,6 +69,27 @@ function CommentSection({
             onChange={(e) => setNewCommentText(e.target.value)}
             placeholder="Write your comment..."
           />
+          <div
+            className="border-2 border-dashed rounded-md p-4 text-center text-sm text-gray-500"
+            onDragOver={handleDragOver}
+            onDrop={handleDrop}
+          >
+            Drag & drop images here
+            {attachedFiles.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-2 justify-center">
+                {attachedFiles.map((file, index) => (
+                  <div key={index} className="text-xs bg-gray-100 p-1 rounded">
+                    <img
+                      src={URL.createObjectURL(file)}
+                      alt={file.name}
+                      className="w-20 h-20 object-cover rounded"
+                    />
+                    <div>{file.name}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
           <Button onClick={handleAddComment}>Add Comment</Button>
         </div>
       )}
@@ -69,7 +107,7 @@ function CommentSection({
               {editingId === comment.id ? (
                 <div className="space-y-2">
                   <Textarea
-                    className="w-full border rounded p-1 text-sm"
+                    className="w-full resize-none overflow-hidden whitespace-pre-wrap break-words break-all"
                     value={editContent}
                     onChange={(e) => setEditContent(e.target.value)}
                   />
@@ -87,7 +125,21 @@ function CommentSection({
                   </div>
                 </div>
               ) : (
-                <p className="text-sm text-gray-700">{comment.content}</p>
+                <div className="max-w-full overflow-hidden">
+                  <p className="text-sm text-gray-700 w-full whitespace-pre-wrap break-words break-all overflow-hidden"> {comment.content} </p>
+                  {comment.images.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {comment.images.map((image) => (
+                        <img
+                          key={image.id} // Use the unique id as the key
+                          src={image.url}
+                          alt={image.name}
+                          className="w-20 h-20 object-cover rounded"
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
               )}
             </div>
 

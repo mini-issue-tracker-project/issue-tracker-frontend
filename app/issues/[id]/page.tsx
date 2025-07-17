@@ -23,19 +23,26 @@ export default function IssueDetailPage() {
   const [editContent, setEditContent] = useState("");
   const [showAddCommentForm, setShowAddCommentForm] = useState(false);
   const [newCommentText, setNewCommentText] = useState("");
+  const [attachedFiles, setAttachedFiles] = useState<File[]>([]); // State for attached files
 
   const handleAddComment = () => {
-    if (newCommentText.trim() === "") return
-    const nextId = comments.length ? Math.max(...comments.map(c => c.id)) + 1 : 1
+    if (newCommentText.trim() === "") return;
+    const nextId = comments.length ? Math.max(...comments.map((c) => c.id)) + 1 : 1;
     const newComment = {
       id: nextId,
       author: "CurrentUser",
       content: newCommentText.trim(),
-    }
-    setComments(prev => [...prev, newComment])
-    setNewCommentText("")
-    setShowAddCommentForm(false)
-  }
+      images: attachedFiles.map((file) => ({
+        id: Number(file.name.split(".")[0]),
+        name: file.name,
+        url: URL.createObjectURL(file)
+      })),
+    };
+    setComments((prev) => [...prev, newComment]);
+    setNewCommentText("");
+    setShowAddCommentForm(false);
+    setAttachedFiles([]); // Clear attached files after adding
+  };
 
   const handleDeleteComment = (id: number) => {
     const confirmed = confirm("Are you sure you want to delete this comment?");
@@ -104,6 +111,8 @@ export default function IssueDetailPage() {
         handleDeleteComment={handleDeleteComment} 
         startEdit={startEdit} 
         handleEditSave={handleEditSave} 
+        attachedFiles={attachedFiles}
+        setAttachedFiles={setAttachedFiles}
       />
     </div>
   );

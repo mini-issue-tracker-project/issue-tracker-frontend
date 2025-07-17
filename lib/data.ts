@@ -10,8 +10,8 @@ export const dummyIssues: Issue[] = [
     priority: "high",
     description: "There is a login bug we need to fix.",
     comments: [
-      { id: 1, author: "Ali", content: "I noticed this happens only on mobile." },
-      { id: 2, author: "Ayşe", content: "Working on this right now." }
+      { id: 1, author: "Ali", content: "I noticed this happens only on mobile.", images: [{ id: 1, name: "image1.jpg", url: "https://placehold.co/600x400/png" }] },
+      { id: 2, author: "Ayşe", content: "Working on this right now.", images: [{ id: 2, name: "image2.jpg", url: "https://placehold.co/600x400/png" }] }
     ]
   },
   {
