@@ -5,6 +5,7 @@ import { useState } from "react";
 import { dummyIssues } from "@/lib/data";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { Textarea } from "@/components/ui/textarea" 
 
 export default function IssueDetailPage() {
   const params = useParams();
@@ -20,6 +21,21 @@ export default function IssueDetailPage() {
   const [comments, setComments] = useState(issue.comments);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editContent, setEditContent] = useState("");
+  const [showAddCommentForm, setShowAddCommentForm] = useState(false);
+  const [newCommentText, setNewCommentText] = useState("");
+
+  const handleAddComment = () => {
+    if (newCommentText.trim() === "") return
+    const nextId = comments.length ? Math.max(...comments.map(c => c.id)) + 1 : 1
+    const newComment = {
+      id: nextId,
+      author: "CurrentUser",
+      content: newCommentText.trim(),
+    }
+    setComments(prev => [...prev, newComment])
+    setNewCommentText("")
+    setShowAddCommentForm(false)
+  }
 
   const handleDeleteComment = (id: number) => {
     const confirmed = confirm("Are you sure you want to delete this comment?");
@@ -49,38 +65,53 @@ export default function IssueDetailPage() {
         </Button>
       </div>
 
-      <h1 className="text-2xl font-bold text-center">{issue.title}</h1>
-      <p className="text-gray-500 text-sm">Author: {issue.author}</p>
-
-      <div className="flex gap-4 text-sm text-gray-700">
-        <span className="px-2 py-1 rounded bg-gray-100">
-          Status: {issue.status}
-        </span>
-        <span className="px-2 py-1 rounded bg-gray-100">
-          Priority: {issue.priority}
-        </span>
-      </div>
-
-      <div className="flex flex-wrap gap-2">
-        {issue.tags.map((t) => (
-          <span
-            key={t.id}
-            className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded-full"
-          >
-            {t.name}
-          </span>
-        ))}
+      <h1 className="text-3xl font-bold text-center mb-4">{issue.title}</h1>
+      <div className="flex flex-wrap gap-4 text-sm text-gray-700">
+        <span className="px-2 py-1 rounded bg-gray-100">Author: {issue.author}</span>
+        <span className="px-2 py-1 rounded bg-gray-100">Status: {issue.status}</span>
+        <span className="px-2 py-1 rounded bg-gray-100">Priority: {issue.priority}</span>
+        <div className="flex items-center gap-2">
+          <span className="font-semibold">Tags:</span>
+          {issue.tags.map((t) => (
+            <span
+              key={t.id}
+              className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded-full"
+            >
+              {t.name}
+            </span>
+          ))}
+        </div>
       </div>
 
       <div className="mt-4 border-t pt-4">
-        <h2 className="font-semibold text-lg mb-2">Description</h2>
-        <p className="text-sm text-gray-700">
+        <h2 className="text-xl font-semibold mb-2">Description</h2>
+        <p className="text-base text-gray-700">
           {issue.description || "No description provided."}
         </p>
       </div>
-
+        
       <div className="mt-4 border-t pt-4">
-        <h2 className="font-semibold text-lg mb-2">Comments</h2>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold">Comments</h2>
+          <Button
+            onClick={() => setShowAddCommentForm(!showAddCommentForm)}
+            variant="outline"
+          >
+            {showAddCommentForm ? "Cancel" : "New Comment"}
+          </Button>
+        </div>
+
+        {showAddCommentForm && (
+          <div className="mb-4 space-y-2">
+            <Textarea
+              value={newCommentText}
+              onChange={(e) => setNewCommentText(e.target.value)}
+              placeholder="Write your comment..."
+            />
+            <Button onClick={handleAddComment}>Add Comment</Button>
+          </div>
+        )}
+
         <ul className="space-y-3">
           {comments.map((comment) => (
             <li
@@ -93,7 +124,7 @@ export default function IssueDetailPage() {
                 </p>
                 {editingId === comment.id ? (
                   <div className="space-y-2">
-                    <textarea
+                    <Textarea
                       className="w-full border rounded p-1 text-sm"
                       value={editContent}
                       onChange={(e) => setEditContent(e.target.value)}
