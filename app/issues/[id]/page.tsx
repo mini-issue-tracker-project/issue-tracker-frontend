@@ -82,7 +82,6 @@ export default function IssueDetailPage() {
           ))}
         </div>
       </div>
-
       <div className="mt-4 border-t pt-4">
         <h2 className="text-xl font-semibold mb-2">Description</h2>
         <p className="text-base text-gray-700">
