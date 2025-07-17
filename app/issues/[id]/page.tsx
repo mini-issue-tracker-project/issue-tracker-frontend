@@ -5,7 +5,7 @@ import { useState } from "react";
 import { dummyIssues } from "@/lib/data";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { Textarea } from "@/components/ui/textarea" 
+import CommentSection from "@/components/ui/CommentSection";
 
 export default function IssueDetailPage() {
   const params = useParams();
@@ -88,88 +88,23 @@ export default function IssueDetailPage() {
           {issue.description || "No description provided."}
         </p>
       </div>
-        
-      <div className="mt-4 border-t pt-4">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Comments</h2>
-          <Button
-            onClick={() => setShowAddCommentForm(!showAddCommentForm)}
-            variant="outline"
-          >
-            {showAddCommentForm ? "Cancel" : "New Comment"}
-          </Button>
-        </div>
-
-        {showAddCommentForm && (
-          <div className="mb-4 space-y-2">
-            <Textarea
-              value={newCommentText}
-              onChange={(e) => setNewCommentText(e.target.value)}
-              placeholder="Write your comment..."
-            />
-            <Button onClick={handleAddComment}>Add Comment</Button>
-          </div>
-        )}
-
-        <ul className="space-y-3">
-          {comments.map((comment) => (
-            <li
-              key={comment.id}
-              className="p-3 rounded-lg bg-gray-50 border flex justify-between items-start"
-            >
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-800">
-                  {comment.author}
-                </p>
-                {editingId === comment.id ? (
-                  <div className="space-y-2">
-                    <Textarea
-                      className="w-full border rounded p-1 text-sm"
-                      value={editContent}
-                      onChange={(e) => setEditContent(e.target.value)}
-                    />
-                    <div className="flex gap-2">
-                      <Button size="sm" onClick={handleEditSave}>
-                        Save
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => setEditingId(null)}
-                      >
-                        Cancel
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-sm text-gray-700">{comment.content}</p>
-                )}
-              </div>
-
-              {editingId !== comment.id && (
-                <div className="flex gap-2 ml-4">
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    className="hover:bg-gray-200"
-                    onClick={() => startEdit(comment.id, comment.content)}
-                  >
-                    Edit
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    className="hover:bg-red-400"
-                    onClick={() => handleDeleteComment(comment.id)}
-                  >
-                    Delete
-                  </Button>
-                </div>
-              )}
-            </li>
-          ))}
-        </ul>
-      </div>
+      
+      <CommentSection 
+        comments={comments} 
+        setComments={setComments} 
+        editingId={editingId} 
+        setEditingId={setEditingId} 
+        editContent={editContent} 
+        setEditContent={setEditContent} 
+        showAddCommentForm={showAddCommentForm} 
+        setShowAddCommentForm={setShowAddCommentForm} 
+        newCommentText={newCommentText} 
+        setNewCommentText={setNewCommentText} 
+        handleAddComment={handleAddComment} 
+        handleDeleteComment={handleDeleteComment} 
+        startEdit={startEdit} 
+        handleEditSave={handleEditSave} 
+      />
     </div>
   );
 }
