@@ -71,7 +71,6 @@ export default function IssueDetailPage() {
           </span>
         ))}
       </div>
-
       <div className="mt-4 border-t pt-4">
         <h2 className="font-semibold text-lg mb-2">Description</h2>
         <p className="text-sm text-gray-700">
