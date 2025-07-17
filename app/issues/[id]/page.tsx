@@ -22,7 +22,7 @@ export default function IssueDetailPage() {
       <ul className="text-sm space-y-1">
         <li>Status: {issue.status}</li>
         <li>Priority: {issue.priority}</li>
-        <li>Tags: {issue.tags.join(", ")}</li>
+        <li>Tags: {issue.tags.map(t => t.name).join(", ")}</li>
       </ul>
 
       <div className="mt-4">

@@ -20,7 +20,7 @@ export function IssueList() {
     author: string;
     priority: "low" | "medium" | "high";
     status: "open" | "in_progress" | "closed";
-    tags: string[];
+    tags: { id: number; name: string }[];
   }>({
     title: "",
     author: "",
@@ -36,7 +36,7 @@ export function IssueList() {
       author: issue.author,
       priority: issue.priority,
       status: issue.status,
-      tags: issue.tags || [],
+      tags: issue.tags || [], // Ensure tags is always an array
     })
   }
 
@@ -60,7 +60,7 @@ export function IssueList() {
 
   const handleAdd = (newIssue: Issue) => {
     const nextId = issues.length ? Math.max(...issues.map(i => i.id)) + 1 : 1
-    setIssues([...issues, { ...newIssue, id: nextId }])
+    setIssues([...issues, { ...newIssue, id: nextId, tags: newIssue.tags || [] }])
     setShowAddForm(false)
   }
 
@@ -130,10 +130,10 @@ export function IssueList() {
               </select>
               <div className="flex gap-2 flex-wrap">
                 {availableTags.map(tag => {
-                  const selected = form.tags.includes(tag)
+                  const selected = form.tags.some(t => t.id === tag.id)
                   return (
                     <Button
-                      key={tag}
+                      key={tag.id}
                       variant={selected ? "default" : "outline"}
                       size="sm"
                       onClick={() =>
@@ -145,7 +145,7 @@ export function IssueList() {
                         }))
                       }
                     >
-                      {tag}
+                      {tag.name}
                     </Button>
                   )
                 })}
@@ -166,12 +166,12 @@ export function IssueList() {
               </p>
               {issue.tags && issue.tags.length > 0 && (
                 <div className="mt-1 flex flex-wrap gap-2 text-sm">
-                  {issue.tags.map((tag, index) => (
+                  {issue.tags.filter(tag => tag && tag.name).map((tag, index) => (
                     <span
                       key={index}
                       className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full text-xs"
                     >
-                      {tag}
+                      {tag.name}
                     </span>
                   ))}
                 </div>

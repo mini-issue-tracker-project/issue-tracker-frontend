@@ -10,18 +10,18 @@ export default function AddIssueForm({ onAdd }: { onAdd: (issue: Issue) => void 
   const [author, setAuthor] = useState("")
   const [priority, setPriority] = useState<"low" | "medium" | "high">("low")
   const [status, setStatus] = useState<"open" | "in_progress" | "closed">("open")
-  const [tags, setTags] = useState<string[]>([])
+  const [tags, setTags] = useState<{ id: number; name: string }[]>([])
 
-  const toggleTag = (tag: string) => {
+  const toggleTag = (tagId: number) => {
     setTags((prev) =>
-      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+      prev.some(t => t.id === tagId) ? prev.filter((t) => t.id !== tagId) : [...prev, { id: tagId, name: availableTags.find(t => t.id === tagId)?.name || "" }]
     )
   }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!title.trim()) return
-    onAdd({ id: 0, title, author, priority, status, tags })
+    onAdd({ id: 0, title, author, priority, status, tags, description: "" })
     setTitle("")
     setAuthor("")
     setPriority("low")
@@ -70,13 +70,13 @@ export default function AddIssueForm({ onAdd }: { onAdd: (issue: Issue) => void 
         <div className="flex flex-wrap gap-2">
           {availableTags.map((tag) => (
             <Button
-            key={tag}
+            key={tag.id}
             type="button"
-            variant={tags.includes(tag) ? "default" : "outline"}
+            variant={tags.some(t => t.id === tag.id) ? "default" : "outline"}
             size="sm"
-            onClick={() => toggleTag(tag)}
+            onClick={() => toggleTag(tag.id)}
           >
-            {tag}
+            {tag.name}
           </Button>
           ))}
         </div>

@@ -5,12 +5,12 @@ import { availableTags } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 
 export function IssueFilters({ onFilterApply }: { onFilterApply: () => void }) {
-  const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [selectedTags, setSelectedTags] = useState<{ id: number; name: string }[]>([])
   const [selectedLogic, setSelectedLogic] = useState<"AND" | "OR">("AND")
 
-  const toggleTag = (tag: string) => {
+  const toggleTag = (tag: { id: number; name: string }) => {
     setSelectedTags(prev =>
-      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
+      prev.some(t => t.id === tag.id) ? prev.filter(t => t.id !== tag.id) : [...prev, tag]
     )
   }
 
@@ -27,16 +27,16 @@ export function IssueFilters({ onFilterApply }: { onFilterApply: () => void }) {
         <div className="flex flex-wrap gap-2 mt-1">
           {availableTags.map(tag => (
             <button
-              key={tag}
+              key={tag.id}
               type="button"
               className={`px-3 py-1 border rounded-full text-sm ${
-                selectedTags.includes(tag)
+                selectedTags.some(t => t.id === tag.id)
                   ? "bg-blue-500 text-white"
                   : "bg-gray-200 text-gray-800"
               }`}
               onClick={() => toggleTag(tag)}
             >
-              {tag}
+              {tag.name}
             </button>
           ))}
         </div>
