@@ -1,4 +1,4 @@
-import { Issue } from "./types";
+import { availableTags, Issue } from "./types";
 
 export const dummyIssues: Issue[] = [
   {
@@ -7,7 +7,7 @@ export const dummyIssues: Issue[] = [
     author: "John Doe",
     status: "open",
     priority: "high",
-    tags: ["bug", "enhancement"],
+    tags: [availableTags[1], availableTags[4]],
     description: "The login page is not responsive on mobile devices."
   },
   {
@@ -16,7 +16,7 @@ export const dummyIssues: Issue[] = [
     author: "Jane Smith",
     status: "in_progress",
     priority: "medium",
-    tags: ["feature", "ui"],
+    tags: [availableTags[2], availableTags[0]],
     description: "Add dark mode support to the application."
   },
   {
@@ -25,7 +25,7 @@ export const dummyIssues: Issue[] = [
     author: "John Doe",
     status: "closed",
     priority: "low",
-    tags: ["bug", "documentation"],
+    tags: [availableTags[1], availableTags[5]],
     description: "Fix the typo in the About page."
   }
 ];
