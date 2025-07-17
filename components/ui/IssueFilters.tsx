@@ -2,6 +2,8 @@
 
 import { Button } from "@/components/ui/button"
 
+export const availableTags = ["ui", "bug", "feature", "enhancement", "documentation"];
+
 export function IssueFilters() {
   return (
     <div className="flex flex-wrap gap-2 mb-4">

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Issue } from "@/lib/types"
 import { dummyIssues as initialIssues } from "@/lib/data"
 import AddIssueForm from './AddIssueForm';
+import { availableTags } from "./IssueFilters";
 
 export function IssueList() {
   const [issues, setIssues] = useState<Issue[]>(initialIssues)
@@ -14,11 +15,14 @@ export function IssueList() {
     title: string;
     priority: "low" | "medium" | "high";
     status: "open" | "in_progress" | "closed";
+    tags: string[];
   }>({
     title: "",
     priority: "low",
     status: "open",
+    tags: [],
   });
+  
 
   const handleEdit = (issue: Issue) => {
     setEditingId(issue.id)
@@ -26,6 +30,7 @@ export function IssueList() {
       title: issue.title,
       priority: issue.priority,
       status: issue.status,
+      tags: issue.tags || [],
     })
   }
 
@@ -73,7 +78,7 @@ export function IssueList() {
               />
               <select
                 value={form.priority}
-                onChange={(e) => setForm({ ...form, priority: e.target.value as "low" | "medium" | "high" })}
+                onChange={(e) => setForm({ ...form, priority: e.target.value as any })}
                 className="w-full border px-3 py-1 rounded"
               >
                 <option value="low">Low</option>
@@ -82,13 +87,36 @@ export function IssueList() {
               </select>
               <select
                 value={form.status}
-                onChange={(e) => setForm({ ...form, status: e.target.value as "open" | "in_progress" | "closed" })}
+                onChange={(e) => setForm({ ...form, status: e.target.value as any })}
                 className="w-full border px-3 py-1 rounded"
               >
                 <option value="open">Open</option>
                 <option value="in_progress">In Progress</option>
                 <option value="closed">Closed</option>
               </select>
+              <div className="flex gap-2 flex-wrap">
+                {availableTags.map(tag => {
+                  const selected = form.tags.includes(tag)
+                  return (
+                    <Button
+                      key={tag}
+                      variant={selected ? "default" : "outline"}
+                      size="sm"
+                      onClick={() =>
+                        setForm(prev => ({
+                          ...prev,
+                          tags: selected
+                            ? prev.tags.filter(t => t !== tag)
+                            : [...prev.tags, tag],
+                        }))
+                      }
+                    >
+                      {tag}
+                    </Button>
+                  )
+                })}
+              </div>
+
               <div className="flex gap-2">
                 <Button size="sm" onClick={handleUpdate}>Save</Button>
                 <Button size="sm" variant="ghost" onClick={() => setEditingId(null)}>Cancel</Button>
