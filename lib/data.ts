@@ -40,7 +40,7 @@ export const dummyIssues: Issue[] = [
     author: "John Doe",
     status: "closed",
     priority: "low",
-    tags: [availableTags[1], availableTags[5]],
+    tags: [availableTags[1], availableTags[4]],
     description: "Fix the typo in the About page.",
     comments: []
   }
