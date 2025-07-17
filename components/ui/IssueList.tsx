@@ -21,12 +21,14 @@ export function IssueList() {
     priority: "low" | "medium" | "high";
     status: "open" | "in_progress" | "closed";
     tags: { id: number; name: string }[];
+    comments: { id: number; author: string; content: string }[];
   }>({
     title: "",
     author: "",
     priority: "low",
     status: "open",
     tags: [],
+    comments: [],
   });
 
   const handleEdit = (issue: Issue) => {
@@ -37,6 +39,7 @@ export function IssueList() {
       priority: issue.priority,
       status: issue.status,
       tags: issue.tags || [], // Ensure tags is always an array
+      comments: issue.comments || [],
     })
   }
 
