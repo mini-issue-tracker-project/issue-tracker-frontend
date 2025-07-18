@@ -5,7 +5,7 @@ import { useState } from "react";
 import { dummyIssues } from "@/lib/data";
 import { Button } from "@/components/ui/Button";
 import Link from "next/link";
-import CommentSection from "@/components/ui/CommentSection";
+import CommentSection from "@/components/custom/comments/CommentSection";
 
 export default function IssueDetailPage() {
   const params = useParams();
