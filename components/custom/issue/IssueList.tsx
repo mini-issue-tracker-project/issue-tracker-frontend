@@ -21,7 +21,7 @@ export function IssueList() {
     priority: "low" | "medium" | "high";
     status: "open" | "in_progress" | "closed";
     tags: { id: number; name: string }[];
-    comments: { id: number; author: string; content: string }[];
+    comments: { id: number; author: string; content: string; images: { id: number; name: string; url: string }[] }[];
   }>({
     title: "",
     author: "",
