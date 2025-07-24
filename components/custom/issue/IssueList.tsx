@@ -1,9 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/Button"
 import { Issue } from "@/lib/types"
-import { dummyIssues as initialIssues } from "@/lib/data"
 import AddIssueForm from './AddIssueForm'
 import { availableTags } from "@/lib/types"
 import { IssueFilters } from "./IssueFilters"
@@ -11,7 +10,7 @@ import { Filter } from "lucide-react"
 import Link from "next/link"
 
 export function IssueList() {
-  const [issues, setIssues] = useState<Issue[]>(initialIssues)
+  const [issues, setIssues] = useState<Issue[]>([]); // Initialize with an empty array
   const [editingId, setEditingId] = useState<number | null>(null)
   const [showAddForm, setShowAddForm] = useState(false)
   const [showFilters, setShowFilters] = useState(false)
@@ -30,6 +29,13 @@ export function IssueList() {
     tags: [],
     comments: [],
   });
+
+  useEffect(() => {
+    fetch('http://localhost:5000/api/issues')
+      .then(response => response.json())
+      .then(data => setIssues(data))
+      .catch(error => console.error('Error fetching issues:', error));
+  }, []);
 
   const handleEdit = (issue: Issue) => {
     setEditingId(issue.id)
