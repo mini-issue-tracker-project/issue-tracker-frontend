@@ -50,28 +50,53 @@ export function IssueList() {
   }
 
   const handleUpdate = () => {
-    setIssues(prev =>
-      prev.map(issue =>
-        issue.id === editingId
-          ? { ...issue, ...form }
-          : issue
-      )
-    )
-    setEditingId(null)
-  }
+    if (editingId !== null) {
+      fetch(`http://localhost:5000/api/issues/${editingId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(form),
+      })
+        .then(response => response.json())
+        .then(data => {
+          setIssues(prev =>
+            prev.map(issue => (issue.id === editingId ? data : issue))
+          );
+          setEditingId(null);
+        })
+        .catch(error => console.error('Error updating issue:', error));
+    }
+  };
 
   const handleDelete = (id: number) => {
-    const confirmed = confirm("Are you sure you want to delete this issue?")
+    const confirmed = confirm("Are you sure you want to delete this issue?");
     if (confirmed) {
-      setIssues(prev => prev.filter(issue => issue.id !== id))
+      fetch(`http://localhost:5000/api/issues/${id}`, {
+        method: 'DELETE',
+      })
+        .then(() => {
+          setIssues(prev => prev.filter(issue => issue.id !== id));
+        })
+        .catch(error => console.error('Error deleting issue:', error));
     }
-  }
+  };
 
   const handleAdd = (newIssue: Issue) => {
-    const nextId = issues.length ? Math.max(...issues.map(i => i.id)) + 1 : 1
-    setIssues([...issues, { ...newIssue, id: nextId, tags: newIssue.tags || [] }])
-    setShowAddForm(false)
-  }
+    fetch('http://localhost:5000/api/issues', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(newIssue),
+    })
+      .then(response => response.json())
+      .then(data => {
+        setIssues([...issues, data]);
+        setShowAddForm(false);
+      })
+      .catch(error => console.error('Error adding issue:', error));
+  };
 
   return (
     <div className="space-y-4">
