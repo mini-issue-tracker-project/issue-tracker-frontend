@@ -1,21 +1,22 @@
 export type Issue = {
-    id: number
-    title: string
-    author: string
-    status: "open" | "in_progress" | "closed"
-    priority: "low" | "medium" | "high"
-    tags: { id: number; name: string }[]
-    description: string
-    comments: Comment[]
-  }
+    id: number;
+    title: string;
+    description: string;
+    status: "open" | "in_progress" | "closed";
+    priority: "low" | "medium" | "high";
+    author: string;
+    created_at: string; // Assuming the date is returned as a string
+    updated_at: string; // Assuming the date is returned as a string
+    tags: Tag[];
+    comments: Comment[];
+    assignee_id?: number; // Optional as it can be null
+};
 
-  export const availableTags = [
-    { id: 1, name: "ui" },
-    { id: 2, name: "bug" },
-    { id: 3, name: "feature" },
-    { id: 4, name: "enhancement" },
-    { id: 5, name: "documentation" },
-  ];
+export type Tag = {
+    id: number;
+    name: string;
+    color?: string; // Optional as it can be null
+};
 
   export type Image = {
     id: number;

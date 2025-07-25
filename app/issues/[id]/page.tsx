@@ -1,29 +1,37 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useState } from "react";
-import { dummyIssues } from "@/lib/data";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 import Link from "next/link";
 import CommentSection from "@/components/custom/comments/CommentSection";
+import { Issue, Comment } from "@/lib/types"; // Import the Issue type
 
 export default function IssueDetailPage() {
   const params = useParams();
   const issueId = Number(params.id);
-  const issue = dummyIssues.find((i) => i.id === issueId);
-
-  // Eğer issue yoksa hata göster
-  if (!issue) {
-    return <div className="p-4">Issue not found.</div>;
-  }
-
-  // Commentler için state tutuyoruz
-  const [comments, setComments] = useState(issue.comments);
+  const [issue, setIssue] = useState<Issue | null>(null);
+  const [comments, setComments] = useState<Comment[]>([]);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editContent, setEditContent] = useState("");
   const [showAddCommentForm, setShowAddCommentForm] = useState(false);
   const [newCommentText, setNewCommentText] = useState("");
-  const [attachedFiles, setAttachedFiles] = useState<File[]>([]); // State for attached files
+  const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
+
+  useEffect(() => {
+    fetch(`http://localhost:5000/api/issues/${issueId}`)
+      .then(response => response.json())
+      .then(data => {
+        setIssue(data);
+        setComments(data.comments || []);
+      })
+      .catch(error => console.error('Error fetching issue:', error));
+  }, [issueId]);
+
+  if (!issue) {
+    return <div className="p-4">Issue not found.</div>;
+  }
+
 
   const handleAddComment = () => {
     if (newCommentText.trim() === "") return;
