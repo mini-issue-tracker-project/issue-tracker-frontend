@@ -1,32 +1,59 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/Button"
-import { Issue } from "@/lib/types"
-import { availableTags } from "@/lib/types"
+import { Issue, Tag } from "@/lib/types"
 
 export default function AddIssueForm({ onAdd }: { onAdd: (issue: Issue) => void }) {
   const [title, setTitle] = useState("")
+  const [description, setDescription] = useState("");
   const [author, setAuthor] = useState("")
   const [priority, setPriority] = useState<"low" | "medium" | "high">("low")
   const [status, setStatus] = useState<"open" | "in_progress" | "closed">("open")
   const [tags, setTags] = useState<{ id: number; name: string }[]>([])
+  const [availableTags, setAvailableTags] = useState<Tag[]>([])
+
+  useEffect(() => {
+    fetch('http://localhost:5000/api/tags')
+      .then(response => response.json())
+      .then(data => setAvailableTags(data))
+      .catch(error => console.error('Error fetching tags:', error))
+  }, [])
 
   const toggleTag = (tagId: number) => {
     setTags((prev) =>
-      prev.some(t => t.id === tagId) ? prev.filter((t) => t.id !== tagId) : [...prev, { id: tagId, name: availableTags.find(t => t.id === tagId)?.name || "" }]
+      prev.some(t => t.id === tagId) ? prev.filter((t) => t.id !== tagId) : [...prev, { id: tagId, name: availableTags.find((t: Tag) => t.id === tagId)?.name || "" }]
     )
   }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!title.trim()) return
-    onAdd({ id: 0, title, author, priority, status, tags, description: "", comments: [] })
-    setTitle("")
-    setAuthor("")
-    setPriority("low")
-    setStatus("open")
-    setTags([])
+    fetch('http://localhost:5000/api/issues', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        title,
+        description,
+        author,
+        priority,
+        status,
+        tags: tags.map(t => t.id),
+      }),
+    })
+      .then(response => response.json())
+      .then(data => {
+        onAdd(data)
+        setTitle("")
+        setDescription("")
+        setAuthor("")
+        setPriority("low")
+        setStatus("open")
+        setTags([])
+      })
+      .catch(error => console.error('Error adding issue:', error))
   }
 
   return (
@@ -36,6 +63,13 @@ export default function AddIssueForm({ onAdd }: { onAdd: (issue: Issue) => void 
         onChange={(e) => setTitle(e.target.value)}
         className="w-full border px-3 py-1 rounded"
         placeholder="Issue title"
+      />
+
+      <textarea
+        value={description}
+        onChange={e => setDescription(e.target.value)}
+        className="w-full border px-3 py-1 rounded"
+        placeholder="Describe the issue…"
       />
 
       <input
@@ -68,16 +102,16 @@ export default function AddIssueForm({ onAdd }: { onAdd: (issue: Issue) => void 
       <div className="space-y-1">
         <label className="text-sm font-semibold">Tags</label>
         <div className="flex flex-wrap gap-2">
-          {availableTags.map((tag) => (
+          {availableTags.map((tag: Tag) => (
             <Button
-            key={tag.id}
-            type="button"
-            variant={tags.some(t => t.id === tag.id) ? "default" : "outline"}
-            size="sm"
-            onClick={() => toggleTag(tag.id)}
-          >
-            {tag.name}
-          </Button>
+              key={tag.id}
+              type="button"
+              variant={tags.some(t => t.id === tag.id) ? "default" : "outline"}
+              size="sm"
+              onClick={() => toggleTag(tag.id)}
+            >
+              {tag.name}
+            </Button>
           ))}
         </div>
       </div>

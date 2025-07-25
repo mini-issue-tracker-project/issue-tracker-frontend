@@ -1,13 +1,20 @@
 "use client"
 
-import { useState } from "react"
-import { availableTags } from "@/lib/types"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/Button"
+import { Tag } from "@/lib/types"
 
 export function IssueFilters({ onFilterApply }: { onFilterApply: () => void }) {
   const [selectedTags, setSelectedTags] = useState<{ id: number; name: string }[]>([])
   const [selectedLogic, setSelectedLogic] = useState<"AND" | "OR">("AND")
+  const [availableTags, setAvailableTags] = useState<Tag[]>([])
 
+  useEffect(() => {
+    fetch('http://localhost:5000/api/tags')
+      .then(response => response.json())
+      .then(data => setAvailableTags(data))
+      .catch(error => console.error('Error fetching tags:', error))
+  }, [])
   const toggleTag = (tag: { id: number; name: string }) => {
     setSelectedTags(prev =>
       prev.some(t => t.id === tag.id) ? prev.filter(t => t.id !== tag.id) : [...prev, tag]
@@ -25,7 +32,7 @@ export function IssueFilters({ onFilterApply }: { onFilterApply: () => void }) {
       <div>
         <label className="text-sm font-semibold">Tags</label>
         <div className="flex flex-wrap gap-2 mt-1">
-          {availableTags.map(tag => (
+          {availableTags.map((tag: Tag) => (
             <button
               key={tag.id}
               type="button"

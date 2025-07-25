@@ -2,9 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/Button"
-import { Issue } from "@/lib/types"
+import { Issue, Tag } from "@/lib/types"
 import AddIssueForm from './AddIssueForm'
-import { availableTags } from "@/lib/types"
 import { IssueFilters } from "./IssueFilters"
 import { Filter } from "lucide-react"
 import Link from "next/link"
@@ -29,12 +28,27 @@ export function IssueList() {
     tags: [],
     comments: [],
   });
+  const [availableTags, setAvailableTags] = useState<Tag[]>([]);
 
   useEffect(() => {
     fetch('http://localhost:5000/api/issues')
       .then(response => response.json())
-      .then(data => setIssues(data))
+      .then(data => {
+        const issuesWithTags = data.map((issue: Issue) => ({
+          ...issue,
+          tags: issue.tags.map((tag: { id: number; name: string }) => tag)
+        }));
+        console.log('Fetched issues with tags:', issuesWithTags); // Debugging log
+        setIssues(issuesWithTags);
+      })
       .catch(error => console.error('Error fetching issues:', error));
+  }, []);
+
+  useEffect(() => {
+    fetch('http://localhost:5000/api/tags')
+      .then(res => res.json())
+      .then(setAvailableTags)
+      .catch(error => console.error('Error fetching tags:', error));
   }, []);
 
   const handleEdit = (issue: Issue) => {
@@ -44,19 +58,24 @@ export function IssueList() {
       author: issue.author,
       priority: issue.priority,
       status: issue.status,
-      tags: issue.tags || [], // Ensure tags is always an array
+      tags: issue.tags.map((tag: { id: number; name: string }) => tag), // Transform tags
       comments: issue.comments || [],
     })
   }
 
   const handleUpdate = () => {
     if (editingId !== null) {
+      const payload = {
+        title: form.title,
+        author: form.author,
+        priority: form.priority,
+        status: form.status,
+        tags: form.tags.map(t => t.id),
+      };
       fetch(`http://localhost:5000/api/issues/${editingId}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(form),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
       })
         .then(response => response.json())
         .then(data => {
@@ -83,19 +102,8 @@ export function IssueList() {
   };
 
   const handleAdd = (newIssue: Issue) => {
-    fetch('http://localhost:5000/api/issues', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(newIssue),
-    })
-      .then(response => response.json())
-      .then(data => {
-        setIssues([...issues, data]);
-        setShowAddForm(false);
-      })
-      .catch(error => console.error('Error adding issue:', error));
+    setIssues([...issues, newIssue]);
+    setShowAddForm(false);
   };
 
   return (
@@ -164,7 +172,7 @@ export function IssueList() {
               </select>
               <div className="flex gap-2 flex-wrap">
                 {availableTags.map(tag => {
-                  const selected = form.tags.some(t => t.id === tag.id)
+                  const selected = form.tags.some(t => t.id === tag.id);
                   return (
                     <Button
                       key={tag.id}
@@ -174,7 +182,7 @@ export function IssueList() {
                         setForm(prev => ({
                           ...prev,
                           tags: selected
-                            ? prev.tags.filter(t => t !== tag)
+                            ? prev.tags.filter(t => t.id !== tag.id)
                             : [...prev.tags, tag],
                         }))
                       }
@@ -200,10 +208,11 @@ export function IssueList() {
               </p>
               {issue.tags && issue.tags.length > 0 && (
                 <div className="mt-1 flex flex-wrap gap-2 text-sm">
-                  {issue.tags.filter(tag => tag && tag.name).map((tag, index) => (
+                  {issue.tags.map((tag: Tag) => (
                     <span
-                      key={index}
-                      className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full text-xs"
+                      key={tag.id}
+                      className="px-2 py-0.5 rounded-full text-xs"
+                      style={{ backgroundColor: tag.color || '#e0e0e0', color: '#000' }}
                     >
                       {tag.name}
                     </span>
