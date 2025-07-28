@@ -12,6 +12,7 @@ export default function AddIssueForm({ onAdd }: { onAdd: (issue: Issue) => void 
   const [status, setStatus] = useState<"open" | "in_progress" | "closed">("open")
   const [tags, setTags] = useState<{ id: number; name: string }[]>([])
   const [availableTags, setAvailableTags] = useState<Tag[]>([])
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     fetch('http://localhost:5000/api/tags')
@@ -26,38 +27,48 @@ export default function AddIssueForm({ onAdd }: { onAdd: (issue: Issue) => void 
     )
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError(null)
     if (!title.trim()) return
-    fetch('http://localhost:5000/api/issues', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        title,
-        description,
-        author,
-        priority,
-        status,
-        tags: tags.map(t => t.id),
-      }),
-    })
-      .then(response => response.json())
-      .then(data => {
-        onAdd(data)
-        setTitle("")
-        setDescription("")
-        setAuthor("")
-        setPriority("low")
-        setStatus("open")
-        setTags([])
+
+    // 1. Check for login token
+    const token = localStorage.getItem("access_token")
+    if (!token) {
+      setError("You must log in before adding an issue.")
+      return
+    }
+
+    // 2. Send request with Bearer token and handle response
+    try {
+      const response = await fetch("http://localhost:5000/api/issues", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ title, description, priority, status, tags: tags.map(t => t.id) }),
       })
-      .catch(error => console.error('Error adding issue:', error))
+      const data = await response.json()
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to add issue")
+      }
+      // 3. Only add issue when data.id is defined
+      onAdd(data)
+      // Reset form
+      setTitle("")
+      setDescription("")
+      setPriority("low")
+      setStatus("open")
+      setTags([])
+    } catch (err: any) {
+      setError(err.message)
+    }
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3 border p-4 rounded shadow mt-4">
+      {error && <p className="text-red-500 mb-2">{error}</p>}
       <input
         value={title}
         onChange={(e) => setTitle(e.target.value)}

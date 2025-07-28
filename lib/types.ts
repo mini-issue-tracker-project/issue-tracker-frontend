@@ -4,7 +4,7 @@ export type Issue = {
     description: string;
     status: "open" | "in_progress" | "closed";
     priority: "low" | "medium" | "high";
-    author: string;
+    author: { id: number; name: string } | null;
     created_at: string; // Assuming the date is returned as a string
     updated_at: string; // Assuming the date is returned as a string
     tags: Tag[];

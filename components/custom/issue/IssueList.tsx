@@ -11,18 +11,19 @@ import Link from "next/link"
 export function IssueList() {
   const [issues, setIssues] = useState<Issue[]>([]); // Initialize with an empty array
   const [editingId, setEditingId] = useState<number | null>(null)
+  const [editError, setEditError] = useState<string | null>(null)
   const [showAddForm, setShowAddForm] = useState(false)
   const [showFilters, setShowFilters] = useState(false)
   const [form, setForm] = useState<{
     title: string;
-    author: string;
+    author: { id: number; name: string } | null;
     priority: "low" | "medium" | "high";
     status: "open" | "in_progress" | "closed";
     tags: { id: number; name: string }[];
     comments: { id: number; author: string; content: string; images: { id: number; name: string; url: string }[] }[];
   }>({
     title: "",
-    author: "",
+    author: null,
     priority: "low",
     status: "open",
     tags: [],
@@ -63,30 +64,47 @@ export function IssueList() {
     })
   }
 
-  const handleUpdate = () => {
-    if (editingId !== null) {
-      const payload = {
-        title: form.title,
-        author: form.author,
-        priority: form.priority,
-        status: form.status,
-        tags: form.tags.map(t => t.id),
-      };
-      fetch(`http://localhost:5000/api/issues/${editingId}`, {
+  const handleUpdate = async () => {
+    if (editingId === null) return
+    setEditError(null)
+
+    // 1. Check for login token
+    const token = localStorage.getItem("access_token")
+    if (!token) {
+      setEditError("You must log in before editing an issue.")
+      return
+    }
+
+    // 2. Prepare payload
+    const payload = {
+      title: form.title,
+      priority: form.priority,
+      status: form.status,
+      tags: form.tags.map(t => t.id),
+    }
+
+    // 3. Send PUT with Bearer token
+    try {
+      const response = await fetch(`http://localhost:5000/api/issues/${editingId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify(payload),
       })
-        .then(response => response.json())
-        .then(data => {
-          setIssues(prev =>
-            prev.map(issue => (issue.id === editingId ? data : issue))
-          );
-          setEditingId(null);
-        })
-        .catch(error => console.error('Error updating issue:', error));
+      const data = await response.json()
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to update issue')
+      }
+
+      // 4. Update list and exit edit mode
+      setIssues(prev => prev.map(issue => issue.id === editingId ? data : issue))
+      setEditingId(null)
+    } catch (err: any) {
+      setEditError(err.message)
     }
-  };
+  }
 
   const handleDelete = (id: number) => {
     const confirmed = confirm("Are you sure you want to delete this issue?");
@@ -145,12 +163,6 @@ export function IssueList() {
                 className="w-full border px-3 py-1 rounded"
                 placeholder="Title"
               />
-              <input
-                value={form.author}
-                onChange={(e) => setForm({ ...form, author: e.target.value })}
-                className="w-full border px-3 py-1 rounded"
-                placeholder="Author"
-              />
               <select
                 value={form.priority}
                 onChange={(e) => setForm({ ...form, priority: e.target.value as any })}
@@ -197,6 +209,7 @@ export function IssueList() {
                 <Button size="sm" onClick={handleUpdate}>Save</Button>
                 <Button size="sm" variant="ghost" onClick={() => setEditingId(null)}>Cancel</Button>
               </div>
+              {editError && <p className="text-red-500 mt-2">{editError}</p>}
             </div>
           ) : (
             <>
@@ -204,7 +217,7 @@ export function IssueList() {
                 <h3 className="font-semibold text-lg cursor-pointer hover:underline">{issue.title}</h3>
               </Link>
               <p className="text-sm text-gray-500">
-                Author: {issue.author} | Status: {issue.status} | Priority: {issue.priority}
+                Author: {issue.author?.name || ""} | Status: {issue.status} | Priority: {issue.priority}
               </p>
               {issue.tags && issue.tags.length > 0 && (
                 <div className="mt-1 flex flex-wrap gap-2 text-sm">
