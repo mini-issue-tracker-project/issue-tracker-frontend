@@ -3,11 +3,11 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/Button"
 import { Issue, Tag } from "@/lib/types"
+import { fetchWithAuth } from "@/app/utils/api";
 
 export default function AddIssueForm({ onAdd }: { onAdd: (issue: Issue) => void }) {
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("");
-  const [author, setAuthor] = useState("")
   const [priority, setPriority] = useState<"low" | "medium" | "high">("low")
   const [status, setStatus] = useState<"open" | "in_progress" | "closed">("open")
   const [tags, setTags] = useState<{ id: number; name: string }[]>([])
@@ -15,7 +15,7 @@ export default function AddIssueForm({ onAdd }: { onAdd: (issue: Issue) => void 
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/tags')
+    fetch('/api/tags')
       .then(response => response.json())
       .then(data => setAvailableTags(data))
       .catch(error => console.error('Error fetching tags:', error))
@@ -41,28 +41,24 @@ export default function AddIssueForm({ onAdd }: { onAdd: (issue: Issue) => void 
 
     // 2. Send request with Bearer token and handle response
     try {
-      const response = await fetch("http://localhost:5000/api/issues", {
+      const response = await fetchWithAuth("/api/issues", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
         body: JSON.stringify({ title, description, priority, status, tags: tags.map(t => t.id) }),
-      })
-      const data = await response.json()
+      });
+      const data = await response.json();
       if (!response.ok) {
-        throw new Error(data.message || "Failed to add issue")
+        throw new Error(data.message || "Failed to add issue");
       }
       // 3. Only add issue when data.id is defined
-      onAdd(data)
+      onAdd(data);
       // Reset form
-      setTitle("")
-      setDescription("")
-      setPriority("low")
-      setStatus("open")
-      setTags([])
+      setTitle("");
+      setDescription("");
+      setPriority("low");
+      setStatus("open");
+      setTags([]);
     } catch (err: any) {
-      setError(err.message)
+      setError(err.message);
     }
   }
 
@@ -81,13 +77,6 @@ export default function AddIssueForm({ onAdd }: { onAdd: (issue: Issue) => void 
         onChange={e => setDescription(e.target.value)}
         className="w-full border px-3 py-1 rounded"
         placeholder="Describe the issue…"
-      />
-
-      <input
-        value={author}
-        onChange={(e) => setAuthor(e.target.value)}
-        className="w-full border px-3 py-1 rounded"
-        placeholder="Author"
       />
 
       <select

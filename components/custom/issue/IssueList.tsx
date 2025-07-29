@@ -7,8 +7,11 @@ import AddIssueForm from './AddIssueForm'
 import { IssueFilters } from "./IssueFilters"
 import { Filter } from "lucide-react"
 import Link from "next/link"
+import { fetchWithAuth } from "@/app/utils/api";
+import { useAuth } from "@/app/context/AuthContext";
 
 export function IssueList() {
+  const { user, role } = useAuth();
   const [issues, setIssues] = useState<Issue[]>([]); // Initialize with an empty array
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editError, setEditError] = useState<string | null>(null)
@@ -32,7 +35,7 @@ export function IssueList() {
   const [availableTags, setAvailableTags] = useState<Tag[]>([]);
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/issues')
+    fetch('/api/issues')
       .then(response => response.json())
       .then(data => {
         const issuesWithTags = data.map((issue: Issue) => ({
@@ -46,7 +49,7 @@ export function IssueList() {
   }, []);
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/tags')
+    fetch('/api/tags')
       .then(res => res.json())
       .then(setAvailableTags)
       .catch(error => console.error('Error fetching tags:', error));
@@ -85,31 +88,26 @@ export function IssueList() {
 
     // 3. Send PUT with Bearer token
     try {
-      const response = await fetch(`http://localhost:5000/api/issues/${editingId}`, {
+      const response = await fetchWithAuth(`/api/issues/${editingId}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
         body: JSON.stringify(payload),
-      })
-      const data = await response.json()
+      });
+      const data = await response.json();
       if (!response.ok) {
-        throw new Error(data.message || 'Failed to update issue')
+        throw new Error(data.message || 'Failed to update issue');
       }
-
       // 4. Update list and exit edit mode
-      setIssues(prev => prev.map(issue => issue.id === editingId ? data : issue))
-      setEditingId(null)
+      setIssues(prev => prev.map(issue => issue.id === editingId ? data : issue));
+      setEditingId(null);
     } catch (err: any) {
-      setEditError(err.message)
+      setEditError(err.message);
     }
   }
 
   const handleDelete = (id: number) => {
     const confirmed = confirm("Are you sure you want to delete this issue?");
     if (confirmed) {
-      fetch(`http://localhost:5000/api/issues/${id}`, {
+      fetchWithAuth(`/api/issues/${id}`, {
         method: 'DELETE',
       })
         .then(() => {
@@ -128,10 +126,11 @@ export function IssueList() {
     <div className="space-y-4">
       {/* Top action bar */}
       <div className="flex justify-between items-center mb-4">
-        <Button onClick={() => setShowAddForm(prev => !prev)}>
-          {showAddForm ? "Cancel" : "Add New Issue"}
-        </Button>
-
+        {user && (
+          <Button onClick={() => setShowAddForm(prev => !prev)}>
+            {showAddForm ? "Cancel" : "Add New Issue"}
+          </Button>
+        )}
         {/* Filter button with icon */}
         <Button
           variant="outline"
@@ -143,7 +142,7 @@ export function IssueList() {
         </Button>
       </div>
 
-      {showAddForm && <AddIssueForm onAdd={handleAdd} />}
+      {showAddForm && user && <AddIssueForm onAdd={handleAdd} />}
 
       {/* Filter UI */}
       {showFilters && (
@@ -233,8 +232,12 @@ export function IssueList() {
                 </div>
               )}
               <div className="mt-3 flex gap-2">
-                <Button size="sm" variant="outline" onClick={() => handleEdit(issue)}>Edit</Button>
-                <Button size="sm" variant="destructive" onClick={() => handleDelete(issue.id)}>Delete</Button>
+                {(role === 'admin' || (user && user.id === issue.author?.id)) && (
+                  <>
+                    <Button size="sm" variant="outline" onClick={() => handleEdit(issue)}>Edit</Button>
+                    <Button size="sm" variant="destructive" onClick={() => handleDelete(issue.id)}>Delete</Button>
+                  </>
+                )}
               </div>
             </>
           )}

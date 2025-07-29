@@ -1,18 +1,39 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/Dialog";
 import { Label } from "@/components/ui/Label";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { useAuth } from "@/app/context/AuthContext";
 
 export default function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const { login } = useAuth();
+  const router = useRouter();
 
-  const handleLogin = () => {
-    console.log("Login with:", { email, password });
-    // backend logic here later
+  const handleLogin = async () => {
+    setError("");
+    try {
+      const res = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        setError(data.error || "Login failed");
+        return;
+      }
+      const data = await res.json();
+      login(data.user, data.access_token);
+      router.push("/");
+    } catch (e) {
+      setError("Network error");
+    }
   };
 
   return (
@@ -25,6 +46,7 @@ export default function LoginForm() {
           <DialogTitle>Login</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
+          {error && <div className="text-red-500 text-sm">{error}</div>}
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
