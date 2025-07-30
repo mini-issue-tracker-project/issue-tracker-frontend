@@ -1,71 +1,284 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Textarea } from "@/components/ui/Textarea";
 import { Button } from "@/components/ui/Button";
-import { Image } from "@/lib/types";
+import { Input } from "@/components/ui/Input";
+import { Label } from "@/components/ui/Label";
+import { fetchWithAuth } from "@/app/utils/api";
 import { useAuth } from "@/app/context/AuthContext";
+import { Comment } from "@/lib/types";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Filter } from "lucide-react";
 
-function CommentSection({
-  comments,
-  setComments,
-  editingId,
-  setEditingId,
-  editContent,
-  setEditContent,
-  showAddCommentForm,
-  setShowAddCommentForm,
-  newCommentText,
-  setNewCommentText,
-  handleAddComment,
-  handleDeleteComment,
-  startEdit,
-  handleEditSave,
-  attachedFiles,
-  setAttachedFiles,
-}: {
-  comments: Array<{ id: number; author: string | { id: number; name: string }; content: string; images: Image[] }>;
-  setComments: (comments: Array<{ id: number; author: string | { id: number; name: string }; content: string; images: Image[] }>) => void;
-  editingId: number | null;
-  setEditingId: (id: number | null) => void;
-  editContent: string;
-  setEditContent: (content: string) => void;
-  showAddCommentForm: boolean;
-  setShowAddCommentForm: (show: boolean) => void;
-  newCommentText: string;
-  setNewCommentText: (text: string) => void;
-  handleAddComment: () => void;
-  handleDeleteComment: (id: number) => void;
-  startEdit: (id: number, currentContent: string) => void;
-  handleEditSave: () => void;
-  attachedFiles: File[];
-  setAttachedFiles: (files: File[]) => void;
-}) {
+interface CommentsData {
+  data: Comment[];
+  total_count: number;
+  skip: number;
+  limit: number;
+}
+
+interface User {
+  id: number;
+  name: string;
+  email: string;
+}
+
+function CommentSection({ issueId }: { issueId: number }) {
   const { user, role } = useAuth();
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    const files = Array.from(e.dataTransfer.files);
-    // Sadece görselleri alalım
-    const imageFiles = files.filter(file => file.type.startsWith('image/'));
-    setAttachedFiles([...attachedFiles, ...imageFiles]);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  
+  // Helper to get query params as object
+  const getQuery = () => {
+    const obj: Record<string, string> = {};
+    searchParams.forEach((v, k) => { obj[k] = v; });
+    return obj;
+  };
+  const query = getQuery();
+  
+  // State for comments data
+  const [commentsData, setCommentsData] = useState<CommentsData>({
+    data: [],
+    total_count: 0,
+    skip: 0,
+    limit: 5
+  });
+  
+  // State for UI
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editContent, setEditContent] = useState("");
+  const [showAddCommentForm, setShowAddCommentForm] = useState(false);
+  const [newCommentText, setNewCommentText] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [availableUsers, setAvailableUsers] = useState<User[]>([]);
+
+  // Fetch comments when query changes
+  useEffect(() => {
+    const skipQ = typeof query.skip === 'string' ? parseInt(query.skip) : 0;
+    const limitQ = typeof query.limit === 'string' ? parseInt(query.limit) : 5;
+    
+    setCommentsData(prev => ({
+      ...prev,
+      skip: isNaN(skipQ) ? 0 : skipQ,
+      limit: isNaN(limitQ) ? 5 : limitQ
+    }));
+    
+          const params = new URLSearchParams({
+        ...Object.fromEntries(Object.entries(query).filter(([k, v]) => v !== undefined)),
+        skip: String(isNaN(skipQ) ? 0 : skipQ),
+        limit: String(isNaN(limitQ) ? 5 : limitQ),
+      });
+
+    setIsLoading(true);
+    fetchWithAuth(`http://localhost:5000/api/issues/${issueId}/comments?${params}`)
+      .then(response => response.json())
+      .then(data => {
+        setCommentsData(data);
+      })
+      .catch(error => console.error('Error fetching comments:', error))
+      .finally(() => setIsLoading(false));
+  }, [searchParams, issueId]);
+
+  // Fetch available users for filter dropdown
+  useEffect(() => {
+    fetch('http://localhost:5000/api/users')
+      .then(response => response.json())
+      .then(setAvailableUsers)
+      .catch(error => console.error('Error fetching users:', error));
+  }, []);
+
+  // Handle adding a new comment
+  const handleAddComment = async () => {
+    if (newCommentText.trim() === "") return;
+    
+    try {
+      const response = await fetchWithAuth(`http://localhost:5000/api/issues/${issueId}/comments`, {
+        method: 'POST',
+        body: JSON.stringify({ content: newCommentText })
+      });
+      
+      if (response.ok) {
+        const newComment = await response.json();
+        setCommentsData(prev => ({
+          ...prev,
+          data: [...prev.data, newComment],
+          total_count: prev.total_count + 1
+        }));
+        setNewCommentText("");
+        setShowAddCommentForm(false);
+      } else {
+        console.error('Failed to add comment');
+      }
+    } catch (error) {
+      console.error('Error adding comment:', error);
+    }
   };
 
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
+  // Handle editing a comment
+  const handleEditSave = async () => {
+    if (!editingId || editContent.trim() === "") return;
+    
+    try {
+      const response = await fetchWithAuth(`http://localhost:5000/api/comments/${editingId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ content: editContent })
+      });
+      
+      if (response.ok) {
+        const updated = await response.json();
+        setCommentsData(prev => ({
+          ...prev,
+          data: prev.data.map(c => c.id === updated.id ? updated : c)
+        }));
+        setEditingId(null);
+        setEditContent("");
+      } else {
+        console.error('Failed to update comment');
+      }
+    } catch (error) {
+      console.error('Error updating comment:', error);
+    }
+  };
+
+  // Handle deleting a comment
+  const handleDeleteComment = async (id: number) => {
+    const confirmed = confirm("Are you sure you want to delete this comment?");
+    if (!confirmed) return;
+    
+    try {
+      const response = await fetchWithAuth(`http://localhost:5000/api/comments/${id}`, {
+        method: 'DELETE'
+      });
+      
+      if (response.ok) {
+        setCommentsData(prev => ({
+          ...prev,
+          data: prev.data.filter(c => c.id !== id),
+          total_count: prev.total_count - 1
+        }));
+      } else {
+        console.error('Failed to delete comment');
+      }
+    } catch (error) {
+      console.error('Error deleting comment:', error);
+    }
+  };
+
+  // For router.push, use router.push(url) with a string
+  const updateQuery = (newQuery: Record<string, any>) => {
+    const params = new URLSearchParams({ ...query, ...newQuery });
+    router.push(`/issues/${issueId}?${params.toString()}`);
+  };
+
+  const startEdit = (id: number, currentContent: string) => {
+    setEditingId(id);
+    setEditContent(currentContent);
   };
 
   return (
     <div className="mt-4 border-t pt-4">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold">Comments</h2>
-        {user && (
+        <h2 className="text-xl font-semibold">Comments ({commentsData.total_count})</h2>
+        <div className="flex gap-2">
+          {user && (
+            <Button
+              onClick={() => setShowAddCommentForm(!showAddCommentForm)}
+              variant="outline"
+            >
+              {showAddCommentForm ? "Cancel" : "New Comment"}
+            </Button>
+          )}
+          {/* Filter button with icon */}
           <Button
-            onClick={() => setShowAddCommentForm(!showAddCommentForm)}
             variant="outline"
+            onClick={() => setShowFilters(prev => !prev)}
+            className="flex items-center gap-1"
           >
-            {showAddCommentForm ? "Cancel" : "New Comment"}
+            <Filter className="h-4 w-4" />
+            Filter
           </Button>
-        )}
+        </div>
       </div>
 
+      {/* Filters */}
+      {showFilters && (
+        <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+          <h3 className="text-sm font-medium mb-2">Filters</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <Label htmlFor="author-filter">Author Name</Label>
+              <Input
+                id="author-filter"
+                type="text"
+                placeholder="Search by author name"
+                value={query.author_name || ""}
+                onChange={(e) => {
+                  const newQuery = { ...query };
+                  if (e.target.value) {
+                    newQuery.author_name = e.target.value;
+                  } else {
+                    delete newQuery.author_name;
+                  }
+                  newQuery.skip = '0'; // Reset pagination
+                  const params = new URLSearchParams(newQuery);
+                  router.push(`/issues/${issueId}?${params.toString()}`);
+                }}
+              />
+            </div>
+            <div>
+              <Label htmlFor="start-date">Start Date</Label>
+              <Input
+                id="start-date"
+                type="datetime-local"
+                value={query.start || ""}
+                onChange={(e) => {
+                  const newQuery = { ...query };
+                  if (e.target.value) {
+                    newQuery.start = e.target.value;
+                  } else {
+                    delete newQuery.start;
+                  }
+                  newQuery.skip = '0'; // Reset pagination
+                  const params = new URLSearchParams(newQuery);
+                  router.push(`/issues/${issueId}?${params.toString()}`);
+                }}
+              />
+            </div>
+            <div>
+              <Label htmlFor="end-date">End Date</Label>
+              <Input
+                id="end-date"
+                type="datetime-local"
+                value={query.end || ""}
+                onChange={(e) => {
+                  const newQuery = { ...query };
+                  if (e.target.value) {
+                    newQuery.end = e.target.value;
+                  } else {
+                    delete newQuery.end;
+                  }
+                  newQuery.skip = '0'; // Reset pagination
+                  const params = new URLSearchParams(newQuery);
+                  router.push(`/issues/${issueId}?${params.toString()}`);
+                }}
+              />
+            </div>
+          </div>
+          <div className="mt-4">
+            <Button 
+              onClick={() => {
+                router.push(`/issues/${issueId}`);
+                setShowFilters(false);
+              }}
+              variant="outline"
+            >
+              Clear Filters
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Add Comment Form */}
       {showAddCommentForm && user && (
         <div className="mb-4 space-y-2">
           <Textarea
@@ -73,107 +286,115 @@ function CommentSection({
             onChange={(e) => setNewCommentText(e.target.value)}
             placeholder="Write your comment..."
           />
-          <div
-            className="border-2 border-dashed rounded-md p-4 text-center text-sm text-gray-500"
-            onDragOver={handleDragOver}
-            onDrop={handleDrop}
-          >
-            Drag & drop images here
-            {attachedFiles.length > 0 && (
-              <div className="mt-2 flex flex-wrap gap-2 justify-center">
-                {attachedFiles.map((file, index) => (
-                  <div key={index} className="text-xs bg-gray-100 p-1 rounded">
-                    <img
-                      src={URL.createObjectURL(file)}
-                      alt={file.name}
-                      className="w-20 h-20 object-cover rounded"
-                    />
-                    <div>{file.name}</div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
           <Button onClick={handleAddComment}>Add Comment</Button>
         </div>
       )}
 
-      <ul className="space-y-3">
-        {comments.map((comment) => {
-          // Support both string and object author
-          const authorId = typeof comment.author === 'object' ? comment.author.id : undefined;
-          return (
-            <li
-              key={comment.id}
-              className="p-3 rounded-lg bg-gray-50 border flex justify-between items-start"
-            >
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-800">
-                  {typeof comment.author === 'object' ? comment.author.name : comment.author}
-                </p>
-                {editingId === comment.id ? (
-                  <div className="space-y-2">
-                    <Textarea
-                      className="w-full resize-none overflow-hidden whitespace-pre-wrap break-words break-all"
-                      value={editContent}
-                      onChange={(e) => setEditContent(e.target.value)}
-                    />
-                    <div className="flex gap-2">
-                      <Button size="sm" onClick={handleEditSave}>
-                        Save
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => setEditingId(null)}
-                      >
-                        Cancel
-                      </Button>
-                    </div>
+      {/* Comments List */}
+      {isLoading ? (
+        <div className="text-center py-4">Loading comments...</div>
+      ) : (
+        <ul className="space-y-3">
+          {commentsData.data.map((comment) => {
+            const authorId = comment.author?.id;
+            const canEdit = role === 'admin' || (user && user.id === authorId);
+            
+            return (
+              <li
+                key={comment.id}
+                className="p-3 rounded-lg bg-gray-50 border flex justify-between items-start"
+              >
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <p className="text-sm font-medium text-gray-800">
+                      {comment.author?.name || 'Unknown'}
+                    </p>
+                    <span className="text-xs text-gray-500">
+                      {new Date(comment.created_at).toLocaleString()}
+                    </span>
                   </div>
-                ) : (
-                  <div className="max-w-full overflow-hidden">
-                    <p className="text-sm text-gray-700 w-full whitespace-pre-wrap break-words break-all overflow-hidden"> {comment.content} </p>
-                    {comment.images.length > 0 && (
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        {comment.images.map((image) => (
-                          <img
-                            key={image.id} // Use the unique id as the key
-                            src={image.url}
-                            alt={image.name}
-                            className="w-20 h-20 object-cover rounded"
-                          />
-                        ))}
+                  
+                  {editingId === comment.id ? (
+                    <div className="space-y-2">
+                      <Textarea
+                        className="w-full resize-none overflow-hidden whitespace-pre-wrap break-words break-all"
+                        value={editContent}
+                        onChange={(e) => setEditContent(e.target.value)}
+                      />
+                      <div className="flex gap-2">
+                        <Button size="sm" onClick={handleEditSave}>
+                          Save
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => setEditingId(null)}
+                        >
+                          Cancel
+                        </Button>
                       </div>
-                    )}
+                    </div>
+                  ) : (
+                    <div className="max-w-full overflow-hidden">
+                      <p className="text-sm text-gray-700 w-full whitespace-pre-wrap break-words break-all overflow-hidden">
+                        {comment.content}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {editingId !== comment.id && canEdit && (
+                  <div className="flex gap-2 ml-4">
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      className="hover:bg-gray-200"
+                      onClick={() => startEdit(comment.id, comment.content)}
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      className="hover:bg-red-400"
+                      onClick={() => handleDeleteComment(comment.id)}
+                    >
+                      Delete
+                    </Button>
                   </div>
                 )}
-              </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
 
-              {editingId !== comment.id && (role === 'admin' || (user && user.id === authorId)) && (
-                <div className="flex gap-2 ml-4">
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    className="hover:bg-gray-200"
-                    onClick={() => startEdit(comment.id, comment.content)}
-                  >
-                    Edit
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    className="hover:bg-red-400"
-                    onClick={() => handleDeleteComment(comment.id)}
-                  >
-                    Delete
-                  </Button>
-                </div>
-              )}
-            </li>
-          );
-        })}
-      </ul>
+      {/* Pagination */}
+      {commentsData.total_count > 0 && (
+        <div className="mt-4 flex justify-between items-center">
+          <div className="text-sm text-gray-600">
+            Showing {commentsData.skip + 1} to {Math.min(commentsData.skip + commentsData.limit, commentsData.total_count)} of {commentsData.total_count} comments
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => updateQuery({ skip: Math.max(0, commentsData.skip - commentsData.limit) })}
+              disabled={commentsData.skip === 0}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => updateQuery({ skip: commentsData.skip + commentsData.limit })}
+              disabled={commentsData.skip + commentsData.limit >= commentsData.total_count}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

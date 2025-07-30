@@ -26,8 +26,9 @@ export type Tag = {
 
   export type Comment = {
     id: number;
-    author: string | { id: number; name: string };
     content: string;
-    images: Image[];
+    created_at: string;
+    author: { id: number; name: string } | null;
+    images?: Image[]; // Optional for backward compatibility
   };
   
