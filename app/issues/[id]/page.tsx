@@ -23,7 +23,17 @@ export default function IssueDetailPage() {
       .then(response => response.json())
       .then(data => {
         setIssue(data);
-        setComments(data.comments || []);
+        setComments(
+          (data.comments || []).map((comment: any) => ({
+            ...comment,
+            author:
+              typeof comment.author === 'object' && comment.author !== null
+                ? comment.author
+                : typeof comment.author === 'string'
+                ? comment.author
+                : 'Unknown',
+          }))
+        );
       })
       .catch(error => console.error('Error fetching issue:', error));
   }, [issueId]);
@@ -82,7 +92,7 @@ export default function IssueDetailPage() {
 
       <h1 className="text-3xl font-bold text-center mb-4">{issue.title}</h1>
       <div className="flex flex-wrap gap-4 text-sm text-gray-700">
-        <span className="px-2 py-1 rounded bg-gray-100">Author: {issue.author}</span>
+        <span className="px-2 py-1 rounded bg-gray-100">Author: {issue.author?.name ?? "Unknown"}</span>
         <span className="px-2 py-1 rounded bg-gray-100">Status: {issue.status}</span>
         <span className="px-2 py-1 rounded bg-gray-100">Priority: {issue.priority}</span>
         <div className="flex items-center gap-2">

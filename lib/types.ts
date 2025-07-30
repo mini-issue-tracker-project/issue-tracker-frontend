@@ -26,7 +26,7 @@ export type Tag = {
 
   export type Comment = {
     id: number;
-    author: string;
+    author: string | { id: number; name: string };
     content: string;
     images: Image[];
   };

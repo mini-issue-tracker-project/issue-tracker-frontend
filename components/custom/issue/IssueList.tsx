@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/Button"
-import { Issue, Tag } from "@/lib/types"
+import { Comment, Issue, Tag } from "@/lib/types"
 import AddIssueForm from './AddIssueForm'
 import { IssueFilters } from "./IssueFilters"
 import { Filter } from "lucide-react"
@@ -38,7 +38,7 @@ export function IssueList() {
     priority: "low" | "medium" | "high";
     status: "open" | "in_progress" | "closed";
     tags: { id: number; name: string }[];
-    comments: { id: number; author: string; content: string; images: { id: number; name: string; url: string }[] }[];
+    comments: Comment[];
   }>({
     title: "",
     author: null,
@@ -86,7 +86,7 @@ export function IssueList() {
       priority: issue.priority,
       status: issue.status,
       tags: issue.tags.map((tag: { id: number; name: string }) => tag), // Transform tags
-      comments: issue.comments || [],
+      comments: issue.comments,
     })
   }
 
