@@ -70,7 +70,7 @@ function CommentSection({ issueId }: { issueId: number }) {
       });
 
     setIsLoading(true);
-    fetchWithAuth(`http://localhost:5000/api/issues/${issueId}/comments?${params}`)
+    fetchWithAuth(`/api/issues/${issueId}/comments?${params}`)
       .then(response => response.json())
       .then(data => {
         setCommentsData(data);
@@ -81,18 +81,37 @@ function CommentSection({ issueId }: { issueId: number }) {
 
   // Fetch available users for filter dropdown
   useEffect(() => {
-    fetch('http://localhost:5000/api/users')
+    fetchWithAuth('/api/users')
       .then(response => response.json())
       .then(setAvailableUsers)
       .catch(error => console.error('Error fetching users:', error));
   }, []);
+
+  // Helper to reload comments
+  const loadComments = () => {
+    const skipQ = typeof query.skip === 'string' ? parseInt(query.skip) : 0;
+    const limitQ = typeof query.limit === 'string' ? parseInt(query.limit) : 5;
+    const params = new URLSearchParams({
+      ...Object.fromEntries(Object.entries(query).filter(([k, v]) => v !== undefined)),
+      skip: String(isNaN(skipQ) ? 0 : skipQ),
+      limit: String(isNaN(limitQ) ? 5 : limitQ),
+    });
+    setIsLoading(true);
+    fetchWithAuth(`/api/issues/${issueId}/comments?${params}`)
+      .then(response => response.json())
+      .then(data => {
+        setCommentsData(data);
+      })
+      .catch(error => console.error('Error fetching comments:', error))
+      .finally(() => setIsLoading(false));
+  };
 
   // Handle adding a new comment
   const handleAddComment = async () => {
     if (newCommentText.trim() === "") return;
     
     try {
-      const response = await fetchWithAuth(`http://localhost:5000/api/issues/${issueId}/comments`, {
+      const response = await fetchWithAuth(`/api/issues/${issueId}/comments`, {
         method: 'POST',
         body: JSON.stringify({ content: newCommentText })
       });
@@ -106,6 +125,7 @@ function CommentSection({ issueId }: { issueId: number }) {
         }));
         setNewCommentText("");
         setShowAddCommentForm(false);
+        loadComments();
       } else {
         console.error('Failed to add comment');
       }
@@ -119,19 +139,15 @@ function CommentSection({ issueId }: { issueId: number }) {
     if (!editingId || editContent.trim() === "") return;
     
     try {
-      const response = await fetchWithAuth(`http://localhost:5000/api/comments/${editingId}`, {
+      const response = await fetchWithAuth(`/api/comments/${editingId}`, {
         method: 'PUT',
         body: JSON.stringify({ content: editContent })
       });
       
       if (response.ok) {
-        const updated = await response.json();
-        setCommentsData(prev => ({
-          ...prev,
-          data: prev.data.map(c => c.id === updated.id ? updated : c)
-        }));
         setEditingId(null);
         setEditContent("");
+        loadComments();
       } else {
         console.error('Failed to update comment');
       }
@@ -146,7 +162,7 @@ function CommentSection({ issueId }: { issueId: number }) {
     if (!confirmed) return;
     
     try {
-      const response = await fetchWithAuth(`http://localhost:5000/api/comments/${id}`, {
+      const response = await fetchWithAuth(`/api/comments/${id}`, {
         method: 'DELETE'
       });
       
@@ -156,6 +172,7 @@ function CommentSection({ issueId }: { issueId: number }) {
           data: prev.data.filter(c => c.id !== id),
           total_count: prev.total_count - 1
         }));
+        loadComments();
       } else {
         console.error('Failed to delete comment');
       }
@@ -298,7 +315,6 @@ function CommentSection({ issueId }: { issueId: number }) {
           {commentsData.data.map((comment) => {
             const authorId = comment.author?.id;
             const canEdit = role === 'admin' || (user && user.id === authorId);
-            
             return (
               <li
                 key={comment.id}
@@ -310,10 +326,9 @@ function CommentSection({ issueId }: { issueId: number }) {
                       {comment.author?.name || 'Unknown'}
                     </p>
                     <span className="text-xs text-gray-500">
-                      {new Date(comment.created_at).toLocaleString()}
+                      Updated at: {new Date(comment.updated_at).toLocaleString()}
                     </span>
                   </div>
-                  
                   {editingId === comment.id ? (
                     <div className="space-y-2">
                       <Textarea
@@ -342,7 +357,6 @@ function CommentSection({ issueId }: { issueId: number }) {
                     </div>
                   )}
                 </div>
-
                 {editingId !== comment.id && canEdit && (
                   <div className="flex gap-2 ml-4">
                     <Button
@@ -399,4 +413,4 @@ function CommentSection({ issueId }: { issueId: number }) {
   );
 }
 
-export default CommentSection; 
+export default CommentSection;

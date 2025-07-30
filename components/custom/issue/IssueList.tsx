@@ -49,12 +49,10 @@ export function IssueList() {
   });
   const [availableTags, setAvailableTags] = useState<Tag[]>([]);
 
-  // Fetch issues when query changes
-  useEffect(() => {
+  // Helper to reload issues
+  const loadIssues = () => {
     const skipQ = typeof query.skip === 'string' ? parseInt(query.skip) : 0;
     const limitQ = typeof query.limit === 'string' ? parseInt(query.limit) : PAGE_SIZE;
-    setSkip(isNaN(skipQ) ? 0 : skipQ);
-    setLimit(isNaN(limitQ) ? PAGE_SIZE : limitQ);
     const params = new URLSearchParams({
       ...Object.fromEntries(Object.entries(query).filter(([k, v]) => v !== undefined)),
       skip: String(isNaN(skipQ) ? 0 : skipQ),
@@ -69,6 +67,11 @@ export function IssueList() {
         setLimit(res.limit);
       })
       .catch(error => console.error('Error fetching issues:', error));
+  };
+
+  // Fetch issues when query changes
+  useEffect(() => {
+    loadIssues();
   }, [searchParams]);
 
   useEffect(() => {
@@ -119,8 +122,8 @@ export function IssueList() {
       if (!response.ok) {
         throw new Error(data.message || 'Failed to update issue');
       }
-      // 4. Update list and exit edit mode
-      setIssues(prev => prev.map(issue => issue.id === editingId ? data : issue));
+      // 4. Refetch current page and exit edit mode
+      loadIssues();
       setEditingId(null);
     } catch (err: any) {
       setEditError(err.message);
@@ -134,15 +137,15 @@ export function IssueList() {
         method: 'DELETE',
       })
         .then(() => {
-          setIssues(prev => prev.filter(issue => issue.id !== id));
+          loadIssues();
         })
         .catch(error => console.error('Error deleting issue:', error));
     }
   };
 
   const handleAdd = (newIssue: Issue) => {
-    setIssues([...issues, newIssue]);
     setShowAddForm(false);
+    loadIssues();
   };
 
   // For router.push, use router.push(url) with a string

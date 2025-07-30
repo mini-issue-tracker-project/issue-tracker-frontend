@@ -31,7 +31,7 @@ export default function IssueDetailPage() {
     setIsLoading(true);
     setError(null);
     
-    fetch(`http://localhost:5000/api/issues/${issueId}`)
+    fetchWithAuth(`/api/issues/${issueId}`)
       .then(response => {
         if (!response.ok) {
           throw new Error('Issue not found');
