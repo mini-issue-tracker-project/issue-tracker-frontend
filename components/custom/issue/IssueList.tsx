@@ -9,10 +9,25 @@ import { Filter } from "lucide-react"
 import Link from "next/link"
 import { fetchWithAuth } from "@/app/utils/api";
 import { useAuth } from "@/app/context/AuthContext";
+import { useRouter, useSearchParams } from "next/navigation"
+
+const PAGE_SIZE = 5;
 
 export function IssueList() {
   const { user, role } = useAuth();
-  const [issues, setIssues] = useState<Issue[]>([]); // Initialize with an empty array
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  // Helper to get query params as object
+  const getQuery = () => {
+    const obj: Record<string, string> = {};
+    searchParams.forEach((v, k) => { obj[k] = v; });
+    return obj;
+  };
+  const query = getQuery();
+  const [issues, setIssues] = useState<Issue[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [skip, setSkip] = useState(0);
+  const [limit, setLimit] = useState(PAGE_SIZE);
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editError, setEditError] = useState<string | null>(null)
   const [showAddForm, setShowAddForm] = useState(false)
@@ -34,19 +49,27 @@ export function IssueList() {
   });
   const [availableTags, setAvailableTags] = useState<Tag[]>([]);
 
+  // Fetch issues when query changes
   useEffect(() => {
-    fetch('/api/issues')
-      .then(response => response.json())
-      .then(data => {
-        const issuesWithTags = data.map((issue: Issue) => ({
-          ...issue,
-          tags: issue.tags.map((tag: { id: number; name: string }) => tag)
-        }));
-        console.log('Fetched issues with tags:', issuesWithTags); // Debugging log
-        setIssues(issuesWithTags);
+    const skipQ = typeof query.skip === 'string' ? parseInt(query.skip) : 0;
+    const limitQ = typeof query.limit === 'string' ? parseInt(query.limit) : PAGE_SIZE;
+    setSkip(isNaN(skipQ) ? 0 : skipQ);
+    setLimit(isNaN(limitQ) ? PAGE_SIZE : limitQ);
+    const params = new URLSearchParams({
+      ...Object.fromEntries(Object.entries(query).filter(([k, v]) => v !== undefined)),
+      skip: String(isNaN(skipQ) ? 0 : skipQ),
+      limit: String(isNaN(limitQ) ? PAGE_SIZE : limitQ),
+    });
+    fetchWithAuth(`/api/issues?${params}`)
+      .then(res => res.json())
+      .then(res => {
+        setIssues(res.data);
+        setTotalCount(res.total_count);
+        setSkip(res.skip);
+        setLimit(res.limit);
       })
       .catch(error => console.error('Error fetching issues:', error));
-  }, []);
+  }, [searchParams]);
 
   useEffect(() => {
     fetch('/api/tags')
@@ -120,6 +143,12 @@ export function IssueList() {
   const handleAdd = (newIssue: Issue) => {
     setIssues([...issues, newIssue]);
     setShowAddForm(false);
+  };
+
+  // For router.push, use router.push(url) with a string
+  const updateQuery = (newQuery: Record<string, any>) => {
+    const params = new URLSearchParams({ ...query, ...newQuery });
+    router.push(`?${params.toString()}`);
   };
 
   return (
@@ -243,6 +272,23 @@ export function IssueList() {
           )}
         </div>
       ))}
+
+      {/* Pagination */}
+      <div className="flex gap-2 mt-4">
+        <Button
+          disabled={skip === 0}
+          onClick={() => updateQuery({ skip: Math.max(0, skip - limit), limit: PAGE_SIZE })}
+        >
+          Prev
+        </Button>
+        <Button
+          disabled={skip + issues.length >= totalCount}
+          onClick={() => updateQuery({ skip: skip + limit, limit: PAGE_SIZE })}
+        >
+          Next
+        </Button>
+        <span className="ml-2 text-sm text-gray-500">{skip + 1} - {Math.min(skip + issues.length, totalCount)} of {totalCount}</span>
+      </div>
     </div>
   )
 }

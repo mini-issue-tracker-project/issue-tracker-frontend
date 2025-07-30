@@ -3,18 +3,36 @@
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/Button"
 import { Tag } from "@/lib/types"
+import { useRouter, useSearchParams } from "next/navigation"
 
 export function IssueFilters({ onFilterApply }: { onFilterApply: () => void }) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  // Helper to get query params as object
+  const getQuery = () => {
+    const obj: Record<string, string> = {};
+    searchParams.forEach((v, k) => { obj[k] = v; });
+    return obj;
+  };
+  const query = getQuery();
   const [selectedTags, setSelectedTags] = useState<{ id: number; name: string }[]>([])
-  const [selectedLogic, setSelectedLogic] = useState<"AND" | "OR">("AND")
   const [availableTags, setAvailableTags] = useState<Tag[]>([])
 
+  // Fetch tags and initialize selectedTags from query
   useEffect(() => {
-    fetch('http://localhost:5000/api/tags')
+    fetch('/api/tags')
       .then(response => response.json())
-      .then(data => setAvailableTags(data))
+      .then(data => {
+        setAvailableTags(data);
+        // Initialize selectedTags from query.tags (comma-separated ids)
+        if (query.tags && typeof query.tags === 'string') {
+          const tagIds = query.tags.split(',').map(Number).filter(Boolean);
+          setSelectedTags(data.filter((tag: Tag) => tagIds.includes(tag.id)));
+        }
+      })
       .catch(error => console.error('Error fetching tags:', error))
-  }, [])
+  }, [query.tags]);
+
   const toggleTag = (tag: { id: number; name: string }) => {
     setSelectedTags(prev =>
       prev.some(t => t.id === tag.id) ? prev.filter(t => t.id !== tag.id) : [...prev, tag]
@@ -22,9 +40,13 @@ export function IssueFilters({ onFilterApply }: { onFilterApply: () => void }) {
   }
 
   const handleFilter = () => {
-    console.log("Filter applied with:", selectedTags, selectedLogic)
+    const params = new URLSearchParams({
+      ...query,
+      tags: selectedTags.map(t => t.id).join(','),
+      skip: '0',
+    });
+    router.push(`?${params.toString()}`);
     onFilterApply();
-    // later, you can hook this to real filtering logic
   }
 
   return (
@@ -48,19 +70,6 @@ export function IssueFilters({ onFilterApply }: { onFilterApply: () => void }) {
           ))}
         </div>
       </div>
-
-      <div className="flex items-center gap-4">
-        <label className="text-sm font-semibold">Logic:</label>
-        <select
-          value={selectedLogic}
-          onChange={(e) => setSelectedLogic(e.target.value as "AND" | "OR")}
-          className="border px-2 py-1 rounded"
-        >
-          <option value="AND">AND</option>
-          <option value="OR">OR</option>
-        </select>
-      </div>
-
       <Button onClick={handleFilter}>Apply Filter</Button>
     </div>
   )
