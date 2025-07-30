@@ -5,14 +5,27 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 import Link from "next/link";
 import CommentSection from "@/components/custom/comments/CommentSection";
-import { Issue } from "@/lib/types";
+import { Issue, Tag } from "@/lib/types";
+import { useAuth } from "@/app/context/AuthContext";
+import { fetchWithAuth } from "@/app/utils/api";
+import { Textarea } from "@/components/ui/Textarea";
 
 export default function IssueDetailPage() {
   const params = useParams();
   const issueId = Number(params.id);
+  const { user, role } = useAuth();
   const [issue, setIssue] = useState<Issue | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [availableTags, setAvailableTags] = useState<Tag[]>([]);
+  const [form, setForm] = useState({
+    title: "",
+    description: "",
+    status: "open" as "open" | "in_progress" | "closed",
+    priority: "low" as "low" | "medium" | "high",
+    tags: [] as Tag[]
+  });
 
   useEffect(() => {
     setIsLoading(true);
@@ -27,6 +40,14 @@ export default function IssueDetailPage() {
       })
       .then(data => {
         setIssue(data);
+        // Initialize form with issue data
+        setForm({
+          title: data.title,
+          description: data.description,
+          status: data.status,
+          priority: data.priority,
+          tags: data.tags
+        });
       })
       .catch(error => {
         console.error('Error fetching issue:', error);
@@ -36,6 +57,30 @@ export default function IssueDetailPage() {
         setIsLoading(false);
       });
   }, [issueId]);
+
+  // Fetch available tags
+  useEffect(() => {
+    fetchWithAuth('/api/tags')
+      .then(r => r.json())
+      .then(setAvailableTags)
+      .catch(error => console.error('Error fetching tags:', error));
+  }, []);
+
+  // When both issue and availableTags are loaded, sync form.tags to use full tag objects from availableTags
+  useEffect(() => {
+    if (issue && availableTags.length > 0) {
+      const tags = issue.tags
+        .map(itag => availableTags.find(t => t.id === itag.id))
+        .filter((t): t is Tag => !!t);
+      setForm({
+        title: issue.title,
+        description: issue.description,
+        status: issue.status,
+        priority: issue.priority,
+        tags,
+      });
+    }
+  }, [issue, availableTags]);
 
   if (isLoading) {
     return (
@@ -70,32 +115,143 @@ export default function IssueDetailPage() {
         <Button variant="outline" size="sm">
           <Link href="/">Back</Link>
         </Button>
+        {user && (role === 'admin' || user.id === issue.author?.id) && (
+          <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+            Edit
+          </Button>
+        )}
       </div>
 
-      <h1 className="text-3xl font-bold text-center mb-4">{issue.title}</h1>
-      <div className="flex flex-wrap gap-4 text-sm text-gray-700">
-        <span className="px-2 py-1 rounded bg-gray-100">Author: {issue.author?.name ?? "Unknown"}</span>
-        <span className="px-2 py-1 rounded bg-gray-100">Status: {issue.status}</span>
-        <span className="px-2 py-1 rounded bg-gray-100">Priority: {issue.priority}</span>
-        <div className="flex items-center gap-2">
-          <span className="font-semibold">Tags:</span>
-          {issue.tags.map((t) => (
-            <span
-              key={t.id}
-              className="px-2 py-1 text-xs rounded-full"
-              style={{ backgroundColor: t.color, color: '#fff' }}
+      {isEditing ? (
+        <div className="space-y-4">
+          <input
+            className="w-full border p-2 rounded"
+            value={form.title}
+            onChange={e => setForm({...form, title: e.target.value})}
+            placeholder="Title"
+          />
+          <Textarea
+            className="w-full border p-2 rounded"
+            value={form.description}
+            onChange={e => setForm({...form, description: e.target.value})}
+            placeholder="Description"
+            rows={4}
+          />
+          <select
+            value={form.status}
+            onChange={e => setForm({...form, status: e.target.value as "open" | "in_progress" | "closed"})}
+            className="w-full border p-2 rounded"
+          >
+            <option value="open">Open</option>
+            <option value="in_progress">In Progress</option>
+            <option value="closed">Closed</option>
+          </select>
+          <select
+            value={form.priority}
+            onChange={e => setForm({...form, priority: e.target.value as "low" | "medium" | "high"})}
+            className="w-full border p-2 rounded"
+          >
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+          </select>
+          <div className="flex flex-wrap gap-2">
+            {availableTags.map(tag => {
+              const selected = form.tags.some(t => t.id === tag.id);
+              return (
+                <Button
+                  key={tag.id}
+                  size="sm"
+                  style={{
+                    backgroundColor: tag.color || (selected ? '#333' : '#eee'),
+                    color: '#fff',
+                    opacity: selected ? 1 : 0.4,
+                    border: selected ? '2px solid #222' : '1px solid #ccc',
+                  }}
+                  onClick={() =>
+                    setForm(prev => ({
+                      ...prev,
+                      tags: selected
+                        ? prev.tags.filter(t => t.id !== tag.id)
+                        : [...prev.tags, tag],
+                    }))
+                  }
+                  type="button"
+                >
+                  {tag.name}
+                </Button>
+              );
+            })}
+          </div>
+          <div className="flex gap-2">
+            <Button
+              className="flex gap-2"
+              onClick={() => {
+                fetchWithAuth(`http://localhost:5000/api/issues/${issueId}`, {
+                  method: 'PUT',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    title: form.title,
+                    description: form.description,
+                    status: form.status,
+                    priority: form.priority,
+                    tags: form.tags.map(t => t.id),
+                  }),
+                })
+                  .then(res => res.json())
+                  .then(updated => {
+                    // After update, map returned tags to availableTags for consistency
+                    const updatedTags = (updated.tags || []).map((utag: any) =>
+                      availableTags.find(t => t.id === utag.id) || utag
+                    );
+                    setIssue({ ...updated, tags: updatedTags });
+                    setForm(f => ({ ...f, tags: updatedTags }));
+                    setIsEditing(false);
+                  })
+                  .catch(error => {
+                    console.error('Error updating issue:', error);
+                  });
+              }}
             >
-              {t.name}
-            </span>
-          ))}
+              Save
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsEditing(false)}
+            >
+              Cancel
+            </Button>
+          </div>
         </div>
-      </div>
-      <div className="mt-4 border-t pt-4">
-        <h2 className="text-xl font-semibold mb-2">Description</h2>
-        <p className="text-base text-gray-700">
-          {issue.description || "No description provided."}
-        </p>
-      </div>
+      ) : (
+        <>
+          <h1 className="text-3xl font-bold text-center mb-4">{issue.title}</h1>
+          <div className="flex flex-wrap gap-4 text-sm text-gray-700">
+            <span className="px-2 py-1 rounded bg-gray-100">Author: {issue.author?.name ?? "Unknown"}</span>
+            <span className="px-2 py-1 rounded bg-gray-100">Status: {issue.status}</span>
+            <span className="px-2 py-1 rounded bg-gray-100">Priority: {issue.priority}</span>
+            <div className="flex items-center gap-2">
+              <span className="font-semibold">Tags:</span>
+              {issue.tags.map((t) => (
+                <span
+                  key={t.id}
+                  className="px-2 py-1 text-xs rounded-full"
+                  style={{ backgroundColor: t.color, color: '#fff' }}
+                >
+                  {t.name}
+                </span>
+              ))}
+            </div>
+          </div>
+          <div className="mt-4 border-t pt-4">
+            <h2 className="text-xl font-semibold mb-2">Description</h2>
+            <p className="text-base text-gray-700">
+              {issue.description || "No description provided."}
+            </p>
+          </div>
+        </>
+      )}
       
       <CommentSection issueId={issueId} />
     </div>

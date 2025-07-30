@@ -216,8 +216,13 @@ export function IssueList() {
                   return (
                     <Button
                       key={tag.id}
-                      variant={selected ? "default" : "outline"}
                       size="sm"
+                      style={{
+                        backgroundColor: tag.color || (selected ? '#333' : '#eee'),
+                        color: '#fff',
+                        opacity: selected ? 1 : 0.4,
+                        border: selected ? '2px solid #222' : '1px solid #ccc',
+                      }}
                       onClick={() =>
                         setForm(prev => ({
                           ...prev,
