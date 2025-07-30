@@ -40,12 +40,19 @@ export function IssueFilters({ onFilterApply }: { onFilterApply: () => void }) {
   }
 
   const handleFilter = () => {
-    const params = new URLSearchParams({
-      ...query,
-      tags: selectedTags.map(t => t.id).join(','),
-      skip: '0',
-    });
-    router.push(`?${params.toString()}`);
+    // Build a clean query object
+    const query: Record<string, string> = {};
+    if (selectedTags.length > 0) {
+      query.tags = selectedTags.map(t => t.id).join(',');
+    }
+    // Always reset skip to 0 on filter
+    if (Object.keys(query).length === 0) {
+      router.push('/');
+    } else {
+      query.skip = '0';
+      const params = new URLSearchParams(query).toString();
+      router.push(`/?${params}`);
+    }
     onFilterApply();
   }
 
