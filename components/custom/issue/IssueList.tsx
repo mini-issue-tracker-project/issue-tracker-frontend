@@ -247,7 +247,10 @@ export function IssueList() {
           ) : (
             <>
               <Link href={`/issues/${issue.id}`}>
-                <h3 className="font-semibold text-lg cursor-pointer hover:underline">{issue.title}</h3>
+                <div className="flex items-center space-x-2">
+                  <h3 className="font-semibold text-lg cursor-pointer hover:underline">{issue.title}</h3>
+                  <span className="text-sm text-gray-500">{issue.comment_count} comments</span>
+                </div>
               </Link>
               <p className="text-sm text-gray-500">
                 Author: {issue.author?.name || ""} | Status: {issue.status} | Priority: {issue.priority}

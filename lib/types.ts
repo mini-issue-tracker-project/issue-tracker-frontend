@@ -10,6 +10,7 @@ export type Issue = {
     tags: Tag[];
     comments: Comment[];
     assignee_id?: number; // Optional as it can be null
+    comment_count: number;
 };
 
 export type Tag = {
