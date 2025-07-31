@@ -43,7 +43,10 @@ export default function AddIssueForm({ onAdd }: { onAdd: (issue: Issue) => void 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
-    if (!title.trim()) return
+    if (!title.trim()) {
+      setError("Title is required.")
+      return
+    }
 
     // 1. Check for login token
     const token = localStorage.getItem("access_token")
@@ -54,14 +57,29 @@ export default function AddIssueForm({ onAdd }: { onAdd: (issue: Issue) => void 
 
     // 2. Send request with Bearer token and handle response
     try {
+      if (!statusId) {
+        setError("Status is required.");
+        return;
+      }
+      if (!priorityId) {
+        setError("Priority is required.");
+        return;
+      }
+      
       const response = await fetchWithAuth("/api/issues", {
         method: "POST",
-        body: JSON.stringify({ title, description, priorityId, statusId, tags: tags.map(t => t.id) }),
+        body: JSON.stringify({
+          title,
+          description,
+          status_id: statusId,
+          priority_id: priorityId,
+          tags: tags.map(t => t.id),
+        }),
       });
       const data = await response.json();
       if (!response.ok) {
-        throw new Error(data.message || "Failed to add issue");
-      }
+        throw new Error(data.error || "Failed to add issue");
+      }      
       // 3. Only add issue when data.id is defined
       onAdd(data);
       // Reset form
@@ -89,7 +107,7 @@ export default function AddIssueForm({ onAdd }: { onAdd: (issue: Issue) => void 
         value={description}
         onChange={e => setDescription(e.target.value)}
         className="w-full border px-3 py-1 rounded"
-        placeholder="Describe the issue…"
+        placeholder="Describe the issue (optional)…"
       />
 
       <select
@@ -97,7 +115,7 @@ export default function AddIssueForm({ onAdd }: { onAdd: (issue: Issue) => void 
         onChange={(e) => setPriorityId(e.target.value ? Number(e.target.value) : null)}
         className="w-full border px-3 py-1 rounded"
       >
-        <option value="">None</option>
+        <option value="">Select priority</option>
         {priorities.map(p => (
           <option key={p.id} value={p.id}>{p.name}</option>
         ))}

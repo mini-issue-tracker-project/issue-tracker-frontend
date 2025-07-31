@@ -102,8 +102,8 @@ export function IssueList() {
     setForm({
       title: issue.title,
       author: issue.author,
-      priority: issue.priority?.name as "low" | "medium" | "high",
-      status: issue.status?.name as "open" | "in_progress" | "closed",
+      priority: issue.priority?.name || "",
+      status: issue.status?.name || "",
       tags: issue.tags.map((tag: { id: number; name: string }) => tag),
       comments: issue.comments,
     })    
