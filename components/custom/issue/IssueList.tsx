@@ -35,19 +35,34 @@ export function IssueList() {
   const [form, setForm] = useState<{
     title: string;
     author: { id: number; name: string } | null;
-    priority: "low" | "medium" | "high";
-    status: "open" | "in_progress" | "closed";
+    priority: string;
+    status: string;
     tags: { id: number; name: string }[];
     comments: Comment[];
   }>({
     title: "",
     author: null,
-    priority: "low",
-    status: "open",
+    priority: "",
+    status: "",
     tags: [],
     comments: [],
   });
   const [availableTags, setAvailableTags] = useState<Tag[]>([]);
+  const [statuses, setStatuses] = useState<{ id: number; name: string }[]>([])
+  const [priorities, setPriorities] = useState<{ id: number; name: string }[]>([])
+
+  useEffect(() => {
+    fetchWithAuth('/api/statuses')
+      .then(r => r.json())
+      .then(setStatuses)
+      .catch(e => console.error('Error fetching statuses:', e))
+  
+    fetchWithAuth('/api/priorities')
+      .then(r => r.json())
+      .then(setPriorities)
+      .catch(e => console.error('Error fetching priorities:', e))
+  }, [])
+
 
   // Helper to reload issues
   const loadIssues = () => {
@@ -75,22 +90,23 @@ export function IssueList() {
   }, [searchParams]);
 
   useEffect(() => {
-    fetch('/api/tags')
-      .then(res => res.json())
+    fetchWithAuth('/api/tags')
+      .then(r => r.json())
       .then(setAvailableTags)
-      .catch(error => console.error('Error fetching tags:', error));
-  }, []);
+      .catch(e => console.error('Error fetching tags:', e))
+  }, [])
+  
 
   const handleEdit = (issue: Issue) => {
     setEditingId(issue.id)
     setForm({
       title: issue.title,
       author: issue.author,
-      priority: issue.priority,
-      status: issue.status,
-      tags: issue.tags.map((tag: { id: number; name: string }) => tag), // Transform tags
+      priority: issue.priority?.name as "low" | "medium" | "high",
+      status: issue.status?.name as "open" | "in_progress" | "closed",
+      tags: issue.tags.map((tag: { id: number; name: string }) => tag),
       comments: issue.comments,
-    })
+    })    
   }
 
   const handleUpdate = async () => {
@@ -105,13 +121,15 @@ export function IssueList() {
     }
 
     // 2. Prepare payload
-    const payload = {
+    const payload: any = {
       title: form.title,
-      priority: form.priority,
-      status: form.status,
       tags: form.tags.map(t => t.id),
-    }
-
+    };
+    const statusObj = statuses.find(s => s.name === form.status);
+    if (statusObj) payload.status_id = statusObj.id;
+    const priorityObj = priorities.find(p => p.name === form.priority);
+    if (priorityObj) payload.priority_id = priorityObj.id;
+    
     // 3. Send PUT with Bearer token
     try {
       const response = await fetchWithAuth(`/api/issues/${editingId}`, {
@@ -198,20 +216,19 @@ export function IssueList() {
                 value={form.priority}
                 onChange={(e) => setForm({ ...form, priority: e.target.value as any })}
                 className="w-full border px-3 py-1 rounded"
-
               >
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
+                {priorities.map(p => (
+                  <option key={p.id} value={p.name}>{p.name}</option>
+                ))}
               </select>
               <select
                 value={form.status}
                 onChange={(e) => setForm({ ...form, status: e.target.value as any })}
                 className="w-full border px-3 py-1 rounded"
               >
-                <option value="open">Open</option>
-                <option value="in_progress">In Progress</option>
-                <option value="closed">Closed</option>
+                {statuses.map(s => (
+                  <option key={s.id} value={s.name}>{s.name}</option>
+                ))}
               </select>
               <div className="flex gap-2 flex-wrap">
                 {availableTags.map(tag => {
@@ -256,7 +273,7 @@ export function IssueList() {
                 </div>
               </Link>
               <p className="text-sm text-gray-500">
-                Author: {issue.author?.name || ""} | Status: {issue.status} | Priority: {issue.priority}
+                Author: {issue.author?.name || ""} | Status: {issue.status?.name} | Priority: {issue.priority?.name}
               </p>
               {issue.tags && issue.tags.length > 0 && (
                 <div className="mt-1 flex flex-wrap gap-2 text-sm">

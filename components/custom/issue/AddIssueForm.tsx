@@ -8,8 +8,10 @@ import { fetchWithAuth } from "@/app/utils/api";
 export default function AddIssueForm({ onAdd }: { onAdd: (issue: Issue) => void }) {
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("");
-  const [priority, setPriority] = useState<"low" | "medium" | "high">("low")
-  const [status, setStatus] = useState<"open" | "in_progress" | "closed">("open")
+  const [statuses, setStatuses] = useState<{ id: number; name: string }[]>([])
+  const [priorities, setPriorities] = useState<{ id: number; name: string }[]>([])
+  const [priorityId, setPriorityId] = useState<number | null>(null)
+  const [statusId, setStatusId] = useState<number | null>(null)
   const [tags, setTags] = useState<{ id: number; name: string }[]>([])
   const [availableTags, setAvailableTags] = useState<Tag[]>([])
   const [error, setError] = useState<string | null>(null)
@@ -19,7 +21,18 @@ export default function AddIssueForm({ onAdd }: { onAdd: (issue: Issue) => void 
       .then(response => response.json())
       .then(data => setAvailableTags(data))
       .catch(error => console.error('Error fetching tags:', error))
+  
+    fetchWithAuth('/api/statuses')
+      .then(r => r.json())
+      .then(d => setStatuses(d))
+      .catch(e => console.error('Error fetching statuses:', e))
+  
+    fetchWithAuth('/api/priorities')
+      .then(r => r.json())
+      .then(d => setPriorities(d))
+      .catch(e => console.error('Error fetching priorities:', e))
   }, [])
+  
 
   const toggleTag = (tagId: number) => {
     setTags((prev) =>
@@ -43,7 +56,7 @@ export default function AddIssueForm({ onAdd }: { onAdd: (issue: Issue) => void 
     try {
       const response = await fetchWithAuth("/api/issues", {
         method: "POST",
-        body: JSON.stringify({ title, description, priority, status, tags: tags.map(t => t.id) }),
+        body: JSON.stringify({ title, description, priorityId, statusId, tags: tags.map(t => t.id) }),
       });
       const data = await response.json();
       if (!response.ok) {
@@ -54,8 +67,8 @@ export default function AddIssueForm({ onAdd }: { onAdd: (issue: Issue) => void 
       // Reset form
       setTitle("");
       setDescription("");
-      setPriority("low");
-      setStatus("open");
+      setPriorityId(null);
+      setStatusId(null);
       setTags([]);
     } catch (err: any) {
       setError(err.message);
@@ -80,24 +93,27 @@ export default function AddIssueForm({ onAdd }: { onAdd: (issue: Issue) => void 
       />
 
       <select
-        value={priority}
-        onChange={(e) => setPriority(e.target.value as "low" | "medium" | "high")}
+        value={priorityId ?? ""}
+        onChange={(e) => setPriorityId(e.target.value ? Number(e.target.value) : null)}
         className="w-full border px-3 py-1 rounded"
       >
-        <option value="low">Low</option>
-        <option value="medium">Medium</option>
-        <option value="high">High</option>
+        <option value="">None</option>
+        {priorities.map(p => (
+          <option key={p.id} value={p.id}>{p.name}</option>
+        ))}
       </select>
 
       <select
-        value={status}
-        onChange={(e) => setStatus(e.target.value as "open" | "in_progress" | "closed")}
+        value={statusId ?? ""}
+        onChange={(e) => setStatusId(e.target.value ? Number(e.target.value) : null)}
         className="w-full border px-3 py-1 rounded"
       >
-        <option value="open">Open</option>
-        <option value="in_progress">In Progress</option>
-        <option value="closed">Closed</option>
+        <option value="">Select status</option>
+        {statuses.map(s => (
+          <option key={s.id} value={s.id}>{s.name}</option>
+        ))}
       </select>
+
 
       <div className="space-y-1">
         <label className="text-sm font-semibold">Tags</label>

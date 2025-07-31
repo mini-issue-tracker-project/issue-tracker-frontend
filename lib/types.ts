@@ -2,8 +2,8 @@ export type Issue = {
     id: number;
     title: string;
     description: string;
-    status: "open" | "in_progress" | "closed";
-    priority: "low" | "medium" | "high";
+    status: { id: number; name: string };
+    priority: { id: number; name: string };
     author: { id: number; name: string } | null;
     created_at: string; // Assuming the date is returned as a string
     updated_at: string; // Assuming the date is returned as a string

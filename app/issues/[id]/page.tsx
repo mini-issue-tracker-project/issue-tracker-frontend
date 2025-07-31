@@ -19,11 +19,16 @@ export default function IssueDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [availableTags, setAvailableTags] = useState<Tag[]>([]);
+  const [statuses, setStatuses] = useState<{ id: number; name: string }[]>([])
+  const [priorities, setPriorities] = useState<{ id: number; name: string }[]>([])
+  const [statusId, setStatusId] = useState<number | null>(null)
+  const [priorityId, setPriorityId] = useState<number | null>(null)
+
   const [form, setForm] = useState({
     title: "",
     description: "",
-    status: "open" as "open" | "in_progress" | "closed",
-    priority: "low" as "low" | "medium" | "high",
+    status: "",
+    priority: "",
     tags: [] as Tag[]
   });
 
@@ -58,12 +63,22 @@ export default function IssueDetailPage() {
       });
   }, [issueId]);
 
-  // Fetch available tags
+  // Fetch available tags, statuses, and priorities
   useEffect(() => {
     fetchWithAuth('/api/tags')
       .then(r => r.json())
       .then(setAvailableTags)
       .catch(error => console.error('Error fetching tags:', error));
+
+    fetchWithAuth('/api/statuses')
+      .then(r => r.json())
+      .then(setStatuses)
+      .catch(e => console.error('Error fetching statuses:', e))
+
+    fetchWithAuth('/api/priorities')
+      .then(r => r.json())
+      .then(setPriorities)
+      .catch(e => console.error('Error fetching priorities:', e))
   }, []);
 
   // When both issue and availableTags are loaded, sync form.tags to use full tag objects from availableTags
@@ -72,13 +87,15 @@ export default function IssueDetailPage() {
       const tags = issue.tags
         .map(itag => availableTags.find(t => t.id === itag.id))
         .filter((t): t is Tag => !!t);
-      setForm({
-        title: issue.title,
-        description: issue.description,
-        status: issue.status,
-        priority: issue.priority,
-        tags,
-      });
+        setForm({
+          title: issue.title,
+          description: issue.description,
+          status: issue.status?.name || "",
+          priority: issue.priority?.name || "",
+          tags,
+        });
+        setStatusId(issue.status?.id || null);
+        setPriorityId(issue.priority?.id || null);        
     }
   }, [issue, availableTags]);
 
@@ -138,23 +155,36 @@ export default function IssueDetailPage() {
             rows={4}
           />
           <select
-            value={form.status}
-            onChange={e => setForm({...form, status: e.target.value as "open" | "in_progress" | "closed"})}
+            value={statusId ?? ""}
+            onChange={e => {
+              const v = e.target.value;
+              setStatusId(v ? Number(v) : null);
+              const name = statuses.find(s => String(s.id) === v)?.name || "";
+              setForm(f => ({ ...f, status: name }));
+            }}
             className="w-full border p-2 rounded"
           >
-            <option value="open">Open</option>
-            <option value="in_progress">In Progress</option>
-            <option value="closed">Closed</option>
+            <option value="">Select status</option>
+            {statuses.map(s => (
+              <option key={s.id} value={s.id}>{s.name}</option>
+            ))}
           </select>
           <select
-            value={form.priority}
-            onChange={e => setForm({...form, priority: e.target.value as "low" | "medium" | "high"})}
+            value={priorityId ?? ""}
+            onChange={e => {
+              const v = e.target.value;
+              setPriorityId(v ? Number(v) : null);
+              const name = priorities.find(p => String(p.id) === v)?.name || "";
+              setForm(f => ({ ...f, priority: name }));
+            }}
             className="w-full border p-2 rounded"
           >
-            <option value="low">Low</option>
-            <option value="medium">Medium</option>
-            <option value="high">High</option>
+            <option value="">None</option>
+            {priorities.map(p => (
+              <option key={p.id} value={p.id}>{p.name}</option>
+            ))}
           </select>
+
           <div className="flex flex-wrap gap-2">
             {availableTags.map(tag => {
               const selected = form.tags.some(t => t.id === tag.id);
@@ -193,8 +223,8 @@ export default function IssueDetailPage() {
                   body: JSON.stringify({
                     title: form.title,
                     description: form.description,
-                    status: form.status,
-                    priority: form.priority,
+                    status_id: statusId,
+                    priority_id: priorityId,
                     tags: form.tags.map(t => t.id),
                   }),
                 })
@@ -229,8 +259,8 @@ export default function IssueDetailPage() {
           <h1 className="text-3xl font-bold text-center mb-4">{issue.title}</h1>
           <div className="flex flex-wrap gap-4 text-sm text-gray-700">
             <span className="px-2 py-1 rounded bg-gray-100">Author: {issue.author?.name ?? "Unknown"}</span>
-            <span className="px-2 py-1 rounded bg-gray-100">Status: {issue.status}</span>
-            <span className="px-2 py-1 rounded bg-gray-100">Priority: {issue.priority}</span>
+            <span className="px-2 py-1 rounded bg-gray-100">Status: {issue.status?.name}</span>
+            <span className="px-2 py-1 rounded bg-gray-100">Priority: {issue.priority?.name}</span>
             <div className="flex items-center gap-2">
               <span className="font-semibold">Tags:</span>
               {issue.tags.map((t) => (
