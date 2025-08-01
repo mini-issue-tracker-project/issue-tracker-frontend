@@ -5,14 +5,7 @@ import { fetchWithAuth } from "@/app/utils/api";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogDescription,
-  DialogFooter 
-} from "@/components/ui/Dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/Dialog";
 
 interface Priority {
   id: number;
@@ -39,6 +32,7 @@ export default function PrioritiesManagement({ isAdmin }: PrioritiesManagementPr
   const [deleteTarget, setDeleteTarget] = useState<Priority | null>(null);
   const [affectedIssues, setAffectedIssues] = useState<AffectedIssue[]>([]);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Fetch priorities on mount
   useEffect(() => {
@@ -127,6 +121,7 @@ export default function PrioritiesManagement({ isAdmin }: PrioritiesManagementPr
     if (!deleteTarget) return;
 
     try {
+      setIsDeleting(true);
       setDeleteError(null);
       const response = await fetchWithAuth(`/api/priorities/${deleteTarget.id}`, {
         method: "DELETE",
@@ -136,6 +131,8 @@ export default function PrioritiesManagement({ isAdmin }: PrioritiesManagementPr
         setPriorities(prev => prev.filter(priority => priority.id !== deleteTarget.id));
         setShowDeleteDialog(false);
         setDeleteTarget(null);
+        setAffectedIssues([]);
+        setDeleteError(null);
       } else {
         const errorData = await response.json();
         if (errorData.error === "Cannot delete, in use") {
@@ -147,12 +144,16 @@ export default function PrioritiesManagement({ isAdmin }: PrioritiesManagementPr
       }
     } catch (err) {
       setDeleteError("Error deleting priority");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
-  const retryDelete = async () => {
-    if (!deleteTarget) return;
-    await confirmDeletePriority();
+  const closeDeleteDialog = () => {
+    setShowDeleteDialog(false);
+    setDeleteTarget(null);
+    setAffectedIssues([]);
+    setDeleteError(null);
   };
 
   const startEditing = (priority: Priority) => {
@@ -269,66 +270,56 @@ export default function PrioritiesManagement({ isAdmin }: PrioritiesManagementPr
         )}
       </div>
 
-      {/* Delete Confirmation Dialog */}
+      {/* Custom Delete Dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Delete Priority</DialogTitle>
             <DialogDescription>
-              {deleteTarget && (
-                <>
-                  Are you sure you want to delete the priority "{deleteTarget.name}"?
-                </>
-              )}
+              {deleteTarget ? `Are you sure you want to delete the priority "${deleteTarget.name}"?` : ""}
             </DialogDescription>
-            {deleteTarget && affectedIssues.length > 0 && (
-              <div className="mt-4">
-                <p className="text-red-600 font-medium">
-                  {deleteError}
-                </p>
-                <div className="mt-2">
-                  <p className="text-sm text-gray-600 mb-2">Affected issues:</p>
-                  <div className="max-h-32 overflow-y-auto space-y-1">
+          </DialogHeader>
+          
+          {deleteError && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded text-red-600 mb-4">
+              <p className="font-medium mb-2">{deleteError}</p>
+              {affectedIssues.length > 0 && (
+                <div>
+                  <p className="text-sm mb-2">The following issues are using this priority:</p>
+                  <ul className="text-sm space-y-1">
                     {affectedIssues.map((issue) => (
-                      <div key={issue.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                        <span className="text-sm">{issue.title}</span>
-                        <a
+                      <li key={issue.id} className="flex items-center gap-2">
+                        <span className="w-2 h-2 bg-red-400 rounded-full"></span>
+                        <a 
                           href={`/issues/${issue.id}`}
-                          className="text-blue-600 hover:text-blue-800 text-xs underline"
                           target="_blank"
                           rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 underline cursor-pointer"
                         >
-                          View Issue
+                          {issue.title}
                         </a>
-                      </div>
+                      </li>
                     ))}
-                  </div>
+                  </ul>
                 </div>
-              </div>
-            )}
-          </DialogHeader>
+              )}
+            </div>
+          )}
+          
           <DialogFooter>
             <Button
-              onClick={() => setShowDeleteDialog(false)}
+              onClick={closeDeleteDialog}
               className="bg-gray-600 text-white hover:bg-gray-700"
             >
               Cancel
             </Button>
-            {affectedIssues.length > 0 ? (
-              <Button
-                onClick={retryDelete}
-                className="bg-blue-600 text-white hover:bg-blue-700"
-              >
-                Retry Delete
-              </Button>
-            ) : (
-              <Button
-                onClick={confirmDeletePriority}
-                className="bg-red-600 text-white hover:bg-red-700"
-              >
-                Delete
-              </Button>
-            )}
+            <Button
+              onClick={confirmDeletePriority}
+              disabled={isDeleting}
+              className="bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
+            >
+              {isDeleting ? "Deleting..." : (deleteError ? "Retry Delete" : "Delete")}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

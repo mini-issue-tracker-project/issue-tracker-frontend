@@ -8,6 +8,7 @@ import { useAuth } from "@/app/context/AuthContext";
 import { Comment } from "@/lib/types";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Filter } from "lucide-react";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
 interface CommentsData {
   data: Comment[];
@@ -51,6 +52,8 @@ function CommentSection({ issueId }: { issueId: number }) {
   const [isLoading, setIsLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [availableUsers, setAvailableUsers] = useState<User[]>([]);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Comment | null>(null);
 
   // Fetch comments when query changes
   useEffect(() => {
@@ -157,19 +160,23 @@ function CommentSection({ issueId }: { issueId: number }) {
   };
 
   // Handle deleting a comment
-  const handleDeleteComment = async (id: number) => {
-    const confirmed = confirm("Are you sure you want to delete this comment?");
-    if (!confirmed) return;
+  const handleDeleteComment = (comment: Comment) => {
+    setDeleteTarget(comment);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDeleteComment = async () => {
+    if (!deleteTarget) return;
     
     try {
-      const response = await fetchWithAuth(`/api/comments/${id}`, {
+      const response = await fetchWithAuth(`/api/comments/${deleteTarget.id}`, {
         method: 'DELETE'
       });
       
       if (response.ok) {
         setCommentsData(prev => ({
           ...prev,
-          data: prev.data.filter(c => c.id !== id),
+          data: prev.data.filter(c => c.id !== deleteTarget.id),
           total_count: prev.total_count - 1
         }));
         loadComments();
@@ -371,7 +378,7 @@ function CommentSection({ issueId }: { issueId: number }) {
                       size="sm"
                       variant="destructive"
                       className="hover:bg-red-400"
-                      onClick={() => handleDeleteComment(comment.id)}
+                      onClick={() => handleDeleteComment(comment)}
                     >
                       Delete
                     </Button>
@@ -409,6 +416,18 @@ function CommentSection({ issueId }: { issueId: number }) {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        title="Delete Comment"
+        description={deleteTarget ? `Are you sure you want to delete this comment?` : ""}
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={confirmDeleteComment}
+        variant="destructive"
+      />
     </div>
   );
 }

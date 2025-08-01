@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 import Link from "next/link";
@@ -9,9 +9,11 @@ import { Issue, Tag } from "@/lib/types";
 import { useAuth } from "@/app/context/AuthContext";
 import { fetchWithAuth } from "@/app/utils/api";
 import { Textarea } from "@/components/ui/Textarea";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
 export default function IssueDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const issueId = Number(params.id);
   const { user, role } = useAuth();
   const [issue, setIssue] = useState<Issue | null>(null);
@@ -23,6 +25,7 @@ export default function IssueDetailPage() {
   const [priorities, setPriorities] = useState<{ id: number; name: string }[]>([])
   const [statusId, setStatusId] = useState<number | null>(null)
   const [priorityId, setPriorityId] = useState<number | null>(null)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const [form, setForm] = useState({
     title: "",
@@ -99,6 +102,27 @@ export default function IssueDetailPage() {
     }
   }, [issue, availableTags]);
 
+  const handleDelete = () => {
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDelete = async () => {
+    try {
+      const response = await fetchWithAuth(`/api/issues/${issueId}`, {
+        method: 'DELETE',
+      });
+      
+      if (response.ok) {
+        // Navigate back to the main page after successful deletion
+        router.push('/');
+      } else {
+        console.error('Failed to delete issue');
+      }
+    } catch (error) {
+      console.error('Error deleting issue:', error);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="p-4 flex items-center justify-center min-h-[200px]">
@@ -133,9 +157,14 @@ export default function IssueDetailPage() {
           <Link href="/">Back</Link>
         </Button>
         {user && (role === 'admin' || user.id === issue.author?.id) && (
-          <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
-            Edit
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+              Edit
+            </Button>
+            <Button variant="destructive" size="sm" onClick={handleDelete}>
+              Delete
+            </Button>
+          </div>
         )}
       </div>
 
@@ -284,6 +313,18 @@ export default function IssueDetailPage() {
       )}
       
       <CommentSection issueId={issueId} />
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        title="Delete Issue"
+        description={issue ? `Are you sure you want to delete the issue "${issue.title}"?` : ""}
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={confirmDelete}
+        variant="destructive"
+      />
     </div>
   );
 }

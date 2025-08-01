@@ -10,6 +10,7 @@ import Link from "next/link"
 import { fetchWithAuth } from "@/app/utils/api";
 import { useAuth } from "@/app/context/AuthContext";
 import { useRouter, useSearchParams } from "next/navigation"
+import ConfirmDialog from "@/components/ui/ConfirmDialog"
 
 const PAGE_SIZE = 5;
 
@@ -50,6 +51,8 @@ export function IssueList() {
   const [availableTags, setAvailableTags] = useState<Tag[]>([]);
   const [statuses, setStatuses] = useState<{ id: number; name: string }[]>([])
   const [priorities, setPriorities] = useState<{ id: number; name: string }[]>([])
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Issue | null>(null);
 
   useEffect(() => {
     fetchWithAuth('/api/statuses')
@@ -148,16 +151,26 @@ export function IssueList() {
     }
   }
 
-  const handleDelete = (id: number) => {
-    const confirmed = confirm("Are you sure you want to delete this issue?");
-    if (confirmed) {
-      fetchWithAuth(`/api/issues/${id}`, {
+  const handleDelete = (issue: Issue) => {
+    setDeleteTarget(issue);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+
+    try {
+      const response = await fetchWithAuth(`/api/issues/${deleteTarget.id}`, {
         method: 'DELETE',
-      })
-        .then(() => {
-          loadIssues();
-        })
-        .catch(error => console.error('Error deleting issue:', error));
+      });
+      
+      if (response.ok) {
+        loadIssues();
+      } else {
+        console.error('Failed to delete issue');
+      }
+    } catch (error) {
+      console.error('Error deleting issue:', error);
     }
   };
 
@@ -292,7 +305,7 @@ export function IssueList() {
                 {(role === 'admin' || (user && user.id === issue.author?.id)) && (
                   <>
                     <Button size="sm" variant="outline" onClick={() => handleEdit(issue)}>Edit</Button>
-                    <Button size="sm" variant="destructive" onClick={() => handleDelete(issue.id)}>Delete</Button>
+                    <Button size="sm" variant="destructive" onClick={() => handleDelete(issue)}>Delete</Button>
                   </>
                 )}
               </div>
@@ -317,6 +330,18 @@ export function IssueList() {
         </Button>
         <span className="ml-2 text-sm text-gray-500">{skip + 1} - {Math.min(skip + issues.length, totalCount)} of {totalCount}</span>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        title="Delete Issue"
+        description={deleteTarget ? `Are you sure you want to delete the issue "${deleteTarget.title}"?` : ""}
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={confirmDelete}
+        variant="destructive"
+      />
     </div>
   )
 }

@@ -5,6 +5,7 @@ import { fetchWithAuth } from "@/app/utils/api";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
 interface Tag {
   id: number;
@@ -23,6 +24,8 @@ export default function TagsManagement({ isAdmin }: TagsManagementProps) {
   const [newTag, setNewTag] = useState({ name: "", color: "#3B82F6" });
   const [editingTag, setEditingTag] = useState<number | null>(null);
   const [editForm, setEditForm] = useState({ name: "", color: "" });
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Tag | null>(null);
 
   // Fetch tags on mount
   useEffect(() => {
@@ -100,19 +103,22 @@ export default function TagsManagement({ isAdmin }: TagsManagementProps) {
     }
   };
 
-  const handleDeleteTag = async (id: number) => {
-    if (!confirm("Are you sure you want to delete this tag?")) {
-      return;
-    }
+  const handleDeleteTag = (tag: Tag) => {
+    setDeleteTarget(tag);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDeleteTag = async () => {
+    if (!deleteTarget) return;
 
     try {
       setError(null);
-      const response = await fetchWithAuth(`/api/tags/${id}`, {
+      const response = await fetchWithAuth(`/api/tags/${deleteTarget.id}`, {
         method: "DELETE",
       });
 
       if (response.ok) {
-        setTags(prev => prev.filter(tag => tag.id !== id));
+        setTags(prev => prev.filter(tag => tag.id !== deleteTarget.id));
       } else {
         const errorData = await response.json();
         setError(errorData.error || "Failed to delete tag");
@@ -260,7 +266,7 @@ export default function TagsManagement({ isAdmin }: TagsManagementProps) {
                       Edit
                     </Button>
                     <Button
-                      onClick={() => handleDeleteTag(tag.id)}
+                      onClick={() => handleDeleteTag(tag)}
                       className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
                     >
                       Delete
@@ -272,6 +278,18 @@ export default function TagsManagement({ isAdmin }: TagsManagementProps) {
           ))
         )}
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        title="Delete Tag"
+        description={deleteTarget ? `Are you sure you want to delete the tag "${deleteTarget.name}"?` : ""}
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={confirmDeleteTag}
+        variant="destructive"
+      />
     </div>
   );
 } 
