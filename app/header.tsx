@@ -33,7 +33,9 @@ export default function Header() {
 
   const handleGoToProfile = () => {
     setShowProfileDropdown(false);
-    router.push("/profile");
+    if (user) {
+      router.push(`/profile/${user.id}`);
+    }
   };
 
   return (
