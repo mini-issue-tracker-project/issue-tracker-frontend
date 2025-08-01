@@ -217,7 +217,7 @@ export default function IssueDetailPage() {
             <Button
               className="flex gap-2"
               onClick={() => {
-                fetchWithAuth(`http://localhost:5000/api/issues/${issueId}`, {
+                fetchWithAuth(`/api/issues/${issueId}`, {
                   method: 'PUT',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({
