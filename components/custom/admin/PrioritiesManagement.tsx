@@ -5,10 +5,23 @@ import { fetchWithAuth } from "@/app/utils/api";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogDescription,
+  DialogFooter 
+} from "@/components/ui/Dialog";
 
 interface Priority {
   id: number;
   name: string;
+}
+
+interface AffectedIssue {
+  id: number;
+  title: string;
 }
 
 interface PrioritiesManagementProps {
@@ -22,6 +35,10 @@ export default function PrioritiesManagement({ isAdmin }: PrioritiesManagementPr
   const [newPriority, setNewPriority] = useState({ name: "" });
   const [editingPriority, setEditingPriority] = useState<number | null>(null);
   const [editForm, setEditForm] = useState({ name: "" });
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Priority | null>(null);
+  const [affectedIssues, setAffectedIssues] = useState<AffectedIssue[]>([]);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   // Fetch priorities on mount
   useEffect(() => {
@@ -99,26 +116,43 @@ export default function PrioritiesManagement({ isAdmin }: PrioritiesManagementPr
     }
   };
 
-  const handleDeletePriority = async (id: number) => {
-    if (!confirm("Are you sure you want to delete this priority?")) {
-      return;
-    }
+  const handleDeletePriority = async (priority: Priority) => {
+    setDeleteTarget(priority);
+    setDeleteError(null);
+    setAffectedIssues([]);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDeletePriority = async () => {
+    if (!deleteTarget) return;
 
     try {
-      setError(null);
-      const response = await fetchWithAuth(`/api/priorities/${id}`, {
+      setDeleteError(null);
+      const response = await fetchWithAuth(`/api/priorities/${deleteTarget.id}`, {
         method: "DELETE",
       });
 
       if (response.ok) {
-        setPriorities(prev => prev.filter(priority => priority.id !== id));
+        setPriorities(prev => prev.filter(priority => priority.id !== deleteTarget.id));
+        setShowDeleteDialog(false);
+        setDeleteTarget(null);
       } else {
         const errorData = await response.json();
-        setError(errorData.error || "Failed to delete priority");
+        if (errorData.error === "Cannot delete, in use") {
+          setAffectedIssues(errorData.affected_issues || []);
+          setDeleteError(errorData.message || "Cannot delete priority that is in use");
+        } else {
+          setDeleteError(errorData.error || "Failed to delete priority");
+        }
       }
     } catch (err) {
-      setError("Error deleting priority");
+      setDeleteError("Error deleting priority");
     }
+  };
+
+  const retryDelete = async () => {
+    if (!deleteTarget) return;
+    await confirmDeletePriority();
   };
 
   const startEditing = (priority: Priority) => {
@@ -222,7 +256,7 @@ export default function PrioritiesManagement({ isAdmin }: PrioritiesManagementPr
                       Edit
                     </Button>
                     <Button
-                      onClick={() => handleDeletePriority(priority.id)}
+                      onClick={() => handleDeletePriority(priority)}
                       className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
                     >
                       Delete
@@ -234,6 +268,70 @@ export default function PrioritiesManagement({ isAdmin }: PrioritiesManagementPr
           ))
         )}
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Delete Priority</DialogTitle>
+            <DialogDescription>
+              {deleteTarget && (
+                <>
+                  Are you sure you want to delete the priority "{deleteTarget.name}"?
+                </>
+              )}
+            </DialogDescription>
+            {deleteTarget && affectedIssues.length > 0 && (
+              <div className="mt-4">
+                <p className="text-red-600 font-medium">
+                  {deleteError}
+                </p>
+                <div className="mt-2">
+                  <p className="text-sm text-gray-600 mb-2">Affected issues:</p>
+                  <div className="max-h-32 overflow-y-auto space-y-1">
+                    {affectedIssues.map((issue) => (
+                      <div key={issue.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                        <span className="text-sm">{issue.title}</span>
+                        <a
+                          href={`/issues/${issue.id}`}
+                          className="text-blue-600 hover:text-blue-800 text-xs underline"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          View Issue
+                        </a>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              onClick={() => setShowDeleteDialog(false)}
+              className="bg-gray-600 text-white hover:bg-gray-700"
+            >
+              Cancel
+            </Button>
+            {affectedIssues.length > 0 ? (
+              <Button
+                onClick={retryDelete}
+                className="bg-blue-600 text-white hover:bg-blue-700"
+              >
+                Retry Delete
+              </Button>
+            ) : (
+              <Button
+                onClick={confirmDeletePriority}
+                className="bg-red-600 text-white hover:bg-red-700"
+              >
+                Delete
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 } 

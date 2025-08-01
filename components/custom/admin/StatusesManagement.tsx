@@ -5,10 +5,23 @@ import { fetchWithAuth } from "@/app/utils/api";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogDescription,
+  DialogFooter 
+} from "@/components/ui/Dialog";
 
 interface Status {
   id: number;
   name: string;
+}
+
+interface AffectedIssue {
+  id: number;
+  title: string;
 }
 
 interface StatusesManagementProps {
@@ -22,6 +35,10 @@ export default function StatusesManagement({ isAdmin }: StatusesManagementProps)
   const [newStatus, setNewStatus] = useState({ name: "" });
   const [editingStatus, setEditingStatus] = useState<number | null>(null);
   const [editForm, setEditForm] = useState({ name: "" });
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Status | null>(null);
+  const [affectedIssues, setAffectedIssues] = useState<AffectedIssue[]>([]);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   // Fetch statuses on mount
   useEffect(() => {
@@ -99,26 +116,43 @@ export default function StatusesManagement({ isAdmin }: StatusesManagementProps)
     }
   };
 
-  const handleDeleteStatus = async (id: number) => {
-    if (!confirm("Are you sure you want to delete this status?")) {
-      return;
-    }
+  const handleDeleteStatus = async (status: Status) => {
+    setDeleteTarget(status);
+    setDeleteError(null);
+    setAffectedIssues([]);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDeleteStatus = async () => {
+    if (!deleteTarget) return;
 
     try {
-      setError(null);
-      const response = await fetchWithAuth(`/api/statuses/${id}`, {
+      setDeleteError(null);
+      const response = await fetchWithAuth(`/api/statuses/${deleteTarget.id}`, {
         method: "DELETE",
       });
 
       if (response.ok) {
-        setStatuses(prev => prev.filter(status => status.id !== id));
+        setStatuses(prev => prev.filter(status => status.id !== deleteTarget.id));
+        setShowDeleteDialog(false);
+        setDeleteTarget(null);
       } else {
         const errorData = await response.json();
-        setError(errorData.error || "Failed to delete status");
+        if (errorData.error === "Cannot delete, in use") {
+          setAffectedIssues(errorData.affected_issues || []);
+          setDeleteError(errorData.message || "Cannot delete status that is in use");
+        } else {
+          setDeleteError(errorData.error || "Failed to delete status");
+        }
       }
     } catch (err) {
-      setError("Error deleting status");
+      setDeleteError("Error deleting status");
     }
+  };
+
+  const retryDelete = async () => {
+    if (!deleteTarget) return;
+    await confirmDeleteStatus();
   };
 
   const startEditing = (status: Status) => {
@@ -222,7 +256,7 @@ export default function StatusesManagement({ isAdmin }: StatusesManagementProps)
                       Edit
                     </Button>
                     <Button
-                      onClick={() => handleDeleteStatus(status.id)}
+                      onClick={() => handleDeleteStatus(status)}
                       className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
                     >
                       Delete
@@ -234,6 +268,70 @@ export default function StatusesManagement({ isAdmin }: StatusesManagementProps)
           ))
         )}
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Delete Status</DialogTitle>
+            <DialogDescription>
+              {deleteTarget && (
+                <>
+                  Are you sure you want to delete the status "{deleteTarget.name}"?
+                </>
+              )}
+            </DialogDescription>
+            {deleteTarget && affectedIssues.length > 0 && (
+              <div className="mt-4">
+                <p className="text-red-600 font-medium">
+                  {deleteError}
+                </p>
+                <div className="mt-2">
+                  <p className="text-sm text-gray-600 mb-2">Affected issues:</p>
+                  <div className="max-h-32 overflow-y-auto space-y-1">
+                    {affectedIssues.map((issue) => (
+                      <div key={issue.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                        <span className="text-sm">{issue.title}</span>
+                        <a
+                          href={`/issues/${issue.id}`}
+                          className="text-blue-600 hover:text-blue-800 text-xs underline"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          View Issue
+                        </a>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              onClick={() => setShowDeleteDialog(false)}
+              className="bg-gray-600 text-white hover:bg-gray-700"
+            >
+              Cancel
+            </Button>
+            {affectedIssues.length > 0 ? (
+              <Button
+                onClick={retryDelete}
+                className="bg-blue-600 text-white hover:bg-blue-700"
+              >
+                Retry Delete
+              </Button>
+            ) : (
+              <Button
+                onClick={confirmDeleteStatus}
+                className="bg-red-600 text-white hover:bg-red-700"
+              >
+                Delete
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 } 
