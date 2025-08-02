@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/Button"
 import { Tag } from "@/lib/types"
 import { useRouter, useSearchParams } from "next/navigation"
 import TagChip from "./TagChip"
+import { fetchWithAuth } from "@/app/utils/api"
 
 export function IssueFilters({ onFilterApply }: { onFilterApply: () => void }) {
   const router = useRouter();
@@ -26,30 +27,40 @@ export function IssueFilters({ onFilterApply }: { onFilterApply: () => void }) {
 
   // Fetch tags and initialize selectedTags from query
   useEffect(() => {
-    fetch('/api/tags')
+    fetchWithAuth('/api/tags')
       .then(response => response.json())
       .then(data => {
         setAvailableTags(data);
         if (query.tags && typeof query.tags === 'string') {
           const tagIds = query.tags.split(',').map(Number).filter(Boolean);
           setSelectedTags(data.filter((tag: Tag) => tagIds.includes(tag.id)));
+        } else {
+          setSelectedTags([]);
         }
       })
       .catch(error => console.error('Error fetching tags:', error))
   
-    fetch('/api/statuses')
+    fetchWithAuth('/api/statuses')
       .then(r => r.json())
       .then(data => {
         setStatuses(data);
-        if (query.status_id) setSelectedStatusId(Number(query.status_id));
+        if (query.status_id) {
+          setSelectedStatusId(Number(query.status_id));
+        } else {
+          setSelectedStatusId(null);
+        }
       })
       .catch(e => console.error('Error fetching statuses:', e))
   
-    fetch('/api/priorities')
+    fetchWithAuth('/api/priorities')
       .then(r => r.json())
       .then(data => {
         setPriorities(data);
-        if (query.priority_id) setSelectedPriorityId(Number(query.priority_id));
+        if (query.priority_id) {
+          setSelectedPriorityId(Number(query.priority_id));
+        } else {
+          setSelectedPriorityId(null);
+        }
       })
       .catch(e => console.error('Error fetching priorities:', e))
   }, [query.tags, query.status_id, query.priority_id]);

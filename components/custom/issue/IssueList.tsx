@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/Button"
 import { Comment, Issue, Tag } from "@/lib/types"
 import AddIssueForm from './AddIssueForm'
 import { IssueFilters } from "./IssueFilters"
+import { ActiveFilters } from "./ActiveFilters"
 import { Filter } from "lucide-react"
 import Link from "next/link"
 import { fetchWithAuth } from "@/app/utils/api";
@@ -207,6 +208,9 @@ export function IssueList() {
       </div>
 
       {showAddForm && user && <AddIssueForm onAdd={handleAdd} />}
+
+      {/* Active Filters */}
+      <ActiveFilters />
 
       {/* Filter UI */}
       {showFilters && (
