@@ -9,7 +9,6 @@ export type Issue = {
     updated_at: string; // Assuming the date is returned as a string
     tags: Tag[];
     comments: Comment[];
-    assignee_id?: number; // Optional as it can be null
     comment_count: number;
 };
 
