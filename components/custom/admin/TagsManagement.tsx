@@ -144,16 +144,12 @@ export default function TagsManagement({ isAdmin }: TagsManagementProps) {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h3 className="text-lg font-semibold mb-4">Tags Management</h3>
-        <div className="text-center text-gray-500">Loading tags...</div>
-      </div>
+      <div className="text-center text-gray-500">Loading tags...</div>
     );
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <h3 className="text-lg font-semibold mb-4">Tags Management</h3>
+    <div>
       
       {error && (
         <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-600">
@@ -164,8 +160,8 @@ export default function TagsManagement({ isAdmin }: TagsManagementProps) {
       {/* Add New Tag Form */}
       <div className="mb-6 p-4 bg-gray-50 rounded-lg">
         <h4 className="font-medium mb-3">Add New Tag</h4>
-        <div className="flex gap-3 items-end">
-          <div className="flex-1">
+        <div className="flex flex-col sm:flex-row gap-3 items-end">
+          <div className="flex-1 min-w-0">
             <Label htmlFor="new-tag-name">Name</Label>
             <Input
               id="new-tag-name"
@@ -174,31 +170,33 @@ export default function TagsManagement({ isAdmin }: TagsManagementProps) {
               placeholder="Enter tag name"
             />
           </div>
-          <div className="flex-1">
-            <Label htmlFor="new-tag-color">Color</Label>
-            <div className="flex gap-2">
-              <Input
-                id="new-tag-color"
-                type="color"
-                value={newTag.color}
-                onChange={(e) => setNewTag(prev => ({ ...prev, color: e.target.value }))}
-                className="w-16 h-10 p-1"
-              />
-              <Input
-                value={newTag.color}
-                onChange={(e) => setNewTag(prev => ({ ...prev, color: e.target.value }))}
-                placeholder="#3B82F6"
-                className="flex-1"
-              />
-            </div>
-          </div>
           <Button
             onClick={handleCreateTag}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 flex-shrink-0"
           >
             Add Tag
           </Button>
         </div>
+        <div className="flex flex-col sm:flex-row gap-3 items-end mt-4">
+          <div className="flex-1 min-w-0">
+              <Label htmlFor="new-tag-color">Color</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="new-tag-color"
+                  type="color"
+                  value={newTag.color}
+                  onChange={(e) => setNewTag(prev => ({ ...prev, color: e.target.value }))}
+                  className="w-16 h-10 p-1 flex-shrink-0"
+                />
+                <Input
+                  value={newTag.color}
+                  onChange={(e) => setNewTag(prev => ({ ...prev, color: e.target.value }))}
+                  placeholder="#3B82F6"
+                  className="flex-1 min-w-0"
+                />
+              </div>
+            </div>
+          </div>
       </div>
 
       {/* Tags List */}
@@ -210,15 +208,15 @@ export default function TagsManagement({ isAdmin }: TagsManagementProps) {
             <div key={tag.id} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
               {editingTag === tag.id ? (
                 // Edit Mode
-                <div className="flex-1 flex gap-3 items-center">
-                  <div className="flex-1">
+                <div className="flex-1 flex flex-col sm:flex-row gap-3 items-start sm:items-center min-w-0">
+                  <div className="flex-1 min-w-0">
                     <Input
                       value={editForm.name}
                       onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
                       placeholder="Tag name"
                     />
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 flex-shrink-0">
                     <Input
                       type="color"
                       value={editForm.color}
@@ -232,7 +230,7 @@ export default function TagsManagement({ isAdmin }: TagsManagementProps) {
                       className="w-24"
                     />
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 flex-shrink-0">
                     <Button
                       onClick={() => handleUpdateTag(tag.id)}
                       className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
@@ -250,15 +248,15 @@ export default function TagsManagement({ isAdmin }: TagsManagementProps) {
               ) : (
                 // View Mode
                 <>
-                  <div className="flex items-center gap-3 flex-1">
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
                     <div
-                      className="w-4 h-4 rounded border border-gray-300"
+                      className="w-4 h-4 rounded border border-gray-300 flex-shrink-0"
                       style={{ backgroundColor: tag.color }}
                     />
-                    <span className="font-medium">{tag.name}</span>
-                    <span className="text-sm text-gray-500">#{tag.color}</span>
+                    <span className="font-medium truncate">{tag.name}</span>
+                    <span className="text-sm text-gray-500 flex-shrink-0">#{tag.color}</span>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 flex-shrink-0">
                     <Button
                       onClick={() => startEditing(tag)}
                       className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"

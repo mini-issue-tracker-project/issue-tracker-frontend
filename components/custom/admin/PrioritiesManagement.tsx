@@ -172,16 +172,12 @@ export default function PrioritiesManagement({ isAdmin }: PrioritiesManagementPr
 
   if (loading) {
     return (
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h3 className="text-lg font-semibold mb-4">Priorities Management</h3>
-        <div className="text-center text-gray-500">Loading priorities...</div>
-      </div>
+      <div className="text-center text-gray-500">Loading priorities...</div>
     );
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <h3 className="text-lg font-semibold mb-4">Priorities Management</h3>
+    <div>
       
       {error && (
         <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-600">
@@ -192,8 +188,8 @@ export default function PrioritiesManagement({ isAdmin }: PrioritiesManagementPr
       {/* Add New Priority Form */}
       <div className="mb-6 p-4 bg-gray-50 rounded-lg">
         <h4 className="font-medium mb-3">Add New Priority</h4>
-        <div className="flex gap-3 items-end">
-          <div className="flex-1">
+        <div className="flex flex-col sm:flex-row gap-3 items-end">
+          <div className="flex-1 min-w-0">
             <Label htmlFor="new-priority-name">Name</Label>
             <Input
               id="new-priority-name"
@@ -204,7 +200,7 @@ export default function PrioritiesManagement({ isAdmin }: PrioritiesManagementPr
           </div>
           <Button
             onClick={handleCreatePriority}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 flex-shrink-0"
           >
             Add Priority
           </Button>
@@ -220,15 +216,15 @@ export default function PrioritiesManagement({ isAdmin }: PrioritiesManagementPr
             <div key={priority.id} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
               {editingPriority === priority.id ? (
                 // Edit Mode
-                <div className="flex-1 flex gap-3 items-center">
-                  <div className="flex-1">
+                <div className="flex-1 flex flex-col sm:flex-row gap-3 items-start sm:items-center min-w-0">
+                  <div className="flex-1 min-w-0">
                     <Input
                       value={editForm.name}
                       onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
                       placeholder="Priority name"
                     />
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 flex-shrink-0">
                     <Button
                       onClick={() => handleUpdatePriority(priority.id)}
                       className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
@@ -246,10 +242,10 @@ export default function PrioritiesManagement({ isAdmin }: PrioritiesManagementPr
               ) : (
                 // View Mode
                 <>
-                  <div className="flex items-center gap-3 flex-1">
-                    <span className="font-medium">{priority.name}</span>
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <span className="font-medium truncate">{priority.name}</span>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 flex-shrink-0">
                     <Button
                       onClick={() => startEditing(priority)}
                       className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
