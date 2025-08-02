@@ -10,6 +10,7 @@ import { useAuth } from "@/app/context/AuthContext";
 import { fetchWithAuth } from "@/app/utils/api";
 import { Textarea } from "@/components/ui/Textarea";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import TagChip from "@/components/custom/issue/TagChip";
 
 export default function IssueDetailPage() {
   const params = useParams();
@@ -218,15 +219,10 @@ export default function IssueDetailPage() {
             {availableTags.map(tag => {
               const selected = form.tags.some(t => t.id === tag.id);
               return (
-                <Button
+                <TagChip
                   key={tag.id}
-                  size="sm"
-                  style={{
-                    backgroundColor: tag.color || (selected ? '#333' : '#eee'),
-                    color: '#fff',
-                    opacity: selected ? 1 : 0.4,
-                    border: selected ? '2px solid #222' : '1px solid #ccc',
-                  }}
+                  tag={tag}
+                  isSelected={selected}
                   onClick={() =>
                     setForm(prev => ({
                       ...prev,
@@ -235,10 +231,8 @@ export default function IssueDetailPage() {
                         : [...prev.tags, tag],
                     }))
                   }
-                  type="button"
-                >
-                  {tag.name}
-                </Button>
+                  size="sm"
+                />
               );
             })}
           </div>
@@ -293,13 +287,11 @@ export default function IssueDetailPage() {
             <div className="flex items-center gap-2">
               <span className="font-semibold">Tags:</span>
               {issue.tags.map((t) => (
-                <span
+                <TagChip
                   key={t.id}
-                  className="px-2 py-1 text-xs rounded-full"
-                  style={{ backgroundColor: t.color, color: '#fff' }}
-                >
-                  {t.name}
-                </span>
+                  tag={t}
+                  size="sm"
+                />
               ))}
             </div>
           </div>

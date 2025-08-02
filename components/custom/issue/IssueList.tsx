@@ -11,6 +11,7 @@ import { fetchWithAuth } from "@/app/utils/api";
 import { useAuth } from "@/app/context/AuthContext";
 import { useRouter, useSearchParams } from "next/navigation"
 import ConfirmDialog from "@/components/ui/ConfirmDialog"
+import TagChip from "./TagChip"
 
 const PAGE_SIZE = 5;
 
@@ -247,15 +248,10 @@ export function IssueList() {
                 {availableTags.map(tag => {
                   const selected = form.tags.some(t => t.id === tag.id);
                   return (
-                    <Button
+                    <TagChip
                       key={tag.id}
-                      size="sm"
-                      style={{
-                        backgroundColor: tag.color || (selected ? '#333' : '#eee'),
-                        color: '#fff',
-                        opacity: selected ? 1 : 0.4,
-                        border: selected ? '2px solid #222' : '1px solid #ccc',
-                      }}
+                      tag={tag}
+                      isSelected={selected}
                       onClick={() =>
                         setForm(prev => ({
                           ...prev,
@@ -264,9 +260,8 @@ export function IssueList() {
                             : [...prev.tags, tag],
                         }))
                       }
-                    >
-                      {tag.name}
-                    </Button>
+                      size="sm"
+                    />
                   )
                 })}
               </div>
@@ -291,13 +286,11 @@ export function IssueList() {
               {issue.tags && issue.tags.length > 0 && (
                 <div className="mt-1 flex flex-wrap gap-2 text-sm">
                   {issue.tags.map((tag: Tag) => (
-                    <span
+                    <TagChip
                       key={tag.id}
-                      className="px-2 py-0.5 rounded-full text-xs"
-                      style={{ backgroundColor: tag.color || '#e0e0e0', color: '#000' }}
-                    >
-                      {tag.name}
-                    </span>
+                      tag={tag}
+                      size="sm"
+                    />
                   ))}
                 </div>
               )}

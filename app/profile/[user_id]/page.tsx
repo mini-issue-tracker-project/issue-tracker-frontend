@@ -8,9 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
 import { Textarea } from "@/components/ui/Textarea";
-import TagsManagement from "@/components/custom/admin/TagsManagement";
-import StatusesManagement from "@/components/custom/admin/StatusesManagement";
-import PrioritiesManagement from "@/components/custom/admin/PrioritiesManagement";
+import AdminManagement from "@/components/custom/admin/AdminManagement";
 
 interface UserProfile {
   id: number;
@@ -590,12 +588,8 @@ export default function ProfilePage() {
 
       {/* Admin Management Section - Only show for admin users */}
       {user.role === 'admin' && (
-        <div className="mt-8 space-y-6">
-          <h2 className="text-2xl font-bold text-gray-800">Admin Management</h2>
-          
-          <TagsManagement isAdmin={user.role === 'admin'} />
-          <StatusesManagement isAdmin={user.role === 'admin'} />
-          <PrioritiesManagement isAdmin={user.role === 'admin'} />
+        <div className="mt-8">
+          <AdminManagement isAdmin={user.role === 'admin'} />
         </div>
       )}
     </div>

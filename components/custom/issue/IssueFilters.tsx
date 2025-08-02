@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/Button"
 import { Tag } from "@/lib/types"
 import { useRouter, useSearchParams } from "next/navigation"
+import TagChip from "./TagChip"
 
 export function IssueFilters({ onFilterApply }: { onFilterApply: () => void }) {
   const router = useRouter();
@@ -89,18 +90,13 @@ export function IssueFilters({ onFilterApply }: { onFilterApply: () => void }) {
         <label className="text-sm font-semibold">Tags</label>
         <div className="flex flex-wrap gap-2 mt-1">
           {availableTags.map((tag: Tag) => (
-            <button
+            <TagChip
               key={tag.id}
-              type="button"
-              className={`px-3 py-1 border rounded-full text-sm ${
-                selectedTags.some(t => t.id === tag.id)
-                  ? "bg-blue-500 text-white"
-                  : "bg-gray-200 text-gray-800"
-              }`}
+              tag={tag}
+              isSelected={selectedTags.some(t => t.id === tag.id)}
               onClick={() => toggleTag(tag)}
-            >
-              {tag.name}
-            </button>
+              size="sm"
+            />
           ))}
         </div>
       </div>

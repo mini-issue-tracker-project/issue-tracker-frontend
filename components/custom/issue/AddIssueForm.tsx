@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/Button"
 import { Issue, Tag } from "@/lib/types"
 import { fetchWithAuth } from "@/app/utils/api";
+import TagChip from "./TagChip"
 
 export default function AddIssueForm({ onAdd }: { onAdd: (issue: Issue) => void }) {
   const [title, setTitle] = useState("")
@@ -137,15 +138,13 @@ export default function AddIssueForm({ onAdd }: { onAdd: (issue: Issue) => void 
         <label className="text-sm font-semibold">Tags</label>
         <div className="flex flex-wrap gap-2">
           {availableTags.map((tag: Tag) => (
-            <Button
+            <TagChip
               key={tag.id}
-              type="button"
-              variant={tags.some(t => t.id === tag.id) ? "default" : "outline"}
-              size="sm"
+              tag={tag}
+              isSelected={tags.some(t => t.id === tag.id)}
               onClick={() => toggleTag(tag.id)}
-            >
-              {tag.name}
-            </Button>
+              size="sm"
+            />
           ))}
         </div>
       </div>
