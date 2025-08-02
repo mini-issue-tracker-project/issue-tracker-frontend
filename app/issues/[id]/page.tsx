@@ -194,7 +194,6 @@ export default function IssueDetailPage() {
             }}
             className="w-full border p-2 rounded"
           >
-            <option value="">Select status</option>
             {statuses.map(s => (
               <option key={s.id} value={s.id}>{s.name}</option>
             ))}
@@ -209,7 +208,6 @@ export default function IssueDetailPage() {
             }}
             className="w-full border p-2 rounded"
           >
-            <option value="">None</option>
             {priorities.map(p => (
               <option key={p.id} value={p.id}>{p.name}</option>
             ))}
