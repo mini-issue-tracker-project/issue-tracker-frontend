@@ -1,12 +1,70 @@
 "use client"
 
-import { useState } from "react"
-import { availableTags } from "@/lib/types"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/Button"
+import { Tag } from "@/lib/types"
+import { useRouter, useSearchParams } from "next/navigation"
+import TagChip from "./TagChip"
+import { fetchWithAuth } from "@/app/utils/api"
 
 export function IssueFilters({ onFilterApply }: { onFilterApply: () => void }) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  // Helper to get query params as object
+  const getQuery = () => {
+    const obj: Record<string, string> = {};
+    searchParams.forEach((v, k) => { obj[k] = v; });
+    return obj;
+  };
+  const query = getQuery();
   const [selectedTags, setSelectedTags] = useState<{ id: number; name: string }[]>([])
-  const [selectedLogic, setSelectedLogic] = useState<"AND" | "OR">("AND")
+  const [availableTags, setAvailableTags] = useState<Tag[]>([])
+  const [statuses, setStatuses] = useState<{ id: number; name: string }[]>([])
+  const [priorities, setPriorities] = useState<{ id: number; name: string }[]>([])
+  const [selectedStatusId, setSelectedStatusId] = useState<number | null>(null)
+  const [selectedPriorityId, setSelectedPriorityId] = useState<number | null>(null)
+
+
+  // Fetch tags and initialize selectedTags from query
+  useEffect(() => {
+    fetchWithAuth('/api/tags')
+      .then(response => response.json())
+      .then(data => {
+        setAvailableTags(data);
+        if (query.tags && typeof query.tags === 'string') {
+          const tagIds = query.tags.split(',').map(Number).filter(Boolean);
+          setSelectedTags(data.filter((tag: Tag) => tagIds.includes(tag.id)));
+        } else {
+          setSelectedTags([]);
+        }
+      })
+      .catch(error => console.error('Error fetching tags:', error))
+  
+    fetchWithAuth('/api/statuses')
+      .then(r => r.json())
+      .then(data => {
+        setStatuses(data);
+        if (query.status_id) {
+          setSelectedStatusId(Number(query.status_id));
+        } else {
+          setSelectedStatusId(null);
+        }
+      })
+      .catch(e => console.error('Error fetching statuses:', e))
+  
+    fetchWithAuth('/api/priorities')
+      .then(r => r.json())
+      .then(data => {
+        setPriorities(data);
+        if (query.priority_id) {
+          setSelectedPriorityId(Number(query.priority_id));
+        } else {
+          setSelectedPriorityId(null);
+        }
+      })
+      .catch(e => console.error('Error fetching priorities:', e))
+  }, [query.tags, query.status_id, query.priority_id]);
+  
 
   const toggleTag = (tag: { id: number; name: string }) => {
     setSelectedTags(prev =>
@@ -15,9 +73,26 @@ export function IssueFilters({ onFilterApply }: { onFilterApply: () => void }) {
   }
 
   const handleFilter = () => {
-    console.log("Filter applied with:", selectedTags, selectedLogic)
+    // Build a clean query object
+    const query: Record<string, string> = {};
+    if (selectedTags.length > 0) {
+      query.tags = selectedTags.map(t => t.id).join(',');
+    }
+    if (selectedStatusId) {
+      query.status_id = String(selectedStatusId);
+    }
+    if (selectedPriorityId) {
+      query.priority_id = String(selectedPriorityId);
+    }    
+    // Always reset skip to 0 on filter
+    if (Object.keys(query).length === 0) {
+      router.push('/');
+    } else {
+      query.skip = '0';
+      const params = new URLSearchParams(query).toString();
+      router.push(`/?${params}`);
+    }
     onFilterApply();
-    // later, you can hook this to real filtering logic
   }
 
   return (
@@ -25,32 +100,41 @@ export function IssueFilters({ onFilterApply }: { onFilterApply: () => void }) {
       <div>
         <label className="text-sm font-semibold">Tags</label>
         <div className="flex flex-wrap gap-2 mt-1">
-          {availableTags.map(tag => (
-            <button
+          {availableTags.map((tag: Tag) => (
+            <TagChip
               key={tag.id}
-              type="button"
-              className={`px-3 py-1 border rounded-full text-sm ${
-                selectedTags.some(t => t.id === tag.id)
-                  ? "bg-blue-500 text-white"
-                  : "bg-gray-200 text-gray-800"
-              }`}
+              tag={tag}
+              isSelected={selectedTags.some(t => t.id === tag.id)}
               onClick={() => toggleTag(tag)}
-            >
-              {tag.name}
-            </button>
+              size="sm"
+            />
           ))}
         </div>
       </div>
-
-      <div className="flex items-center gap-4">
-        <label className="text-sm font-semibold">Logic:</label>
+      <div>
+        <label className="text-sm font-semibold">Status</label>
         <select
-          value={selectedLogic}
-          onChange={(e) => setSelectedLogic(e.target.value as "AND" | "OR")}
-          className="border px-2 py-1 rounded"
+          value={selectedStatusId ?? ""}
+          onChange={(e) => setSelectedStatusId(e.target.value ? Number(e.target.value) : null)}
+          className="w-full border px-3 py-1 rounded mt-1"
         >
-          <option value="AND">AND</option>
-          <option value="OR">OR</option>
+          <option value="">Any</option>
+          {statuses.map(s => (
+            <option key={s.id} value={s.id}>{s.name}</option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label className="text-sm font-semibold">Priority</label>
+        <select
+          value={selectedPriorityId ?? ""}
+          onChange={(e) => setSelectedPriorityId(e.target.value ? Number(e.target.value) : null)}
+          className="w-full border px-3 py-1 rounded mt-1"
+        >
+          <option value="">Any</option>
+          {priorities.map(p => (
+            <option key={p.id} value={p.id}>{p.name}</option>
+          ))}
         </select>
       </div>
 

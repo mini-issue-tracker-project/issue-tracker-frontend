@@ -1,20 +1,40 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/Dialog";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
+import { useAuth } from "@/app/context/AuthContext";
 
 export default function RegisterForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
-  const [username, setUsername] = useState("");
+  const [error, setError] = useState("");
+  const { login } = useAuth();
+  const router = useRouter();
 
-  const handleRegister = () => {
-    // burada register işlemini yapacaksın (API çağırabilirsin)
-    console.log("Register:", { name, username, email, password });
+  const handleRegister = async () => {
+    setError("");
+    try {
+      const res = await fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        setError(data.error || "Registration failed");
+        return;
+      }
+      const data = await res.json();
+      login(data.user, data.access_token);
+      router.push("/");
+    } catch (e) {
+      setError("Network error");
+    }
   };
 
   return (
@@ -27,6 +47,7 @@ export default function RegisterForm() {
           <DialogTitle>Create an account</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
+          {error && <div className="text-red-500 text-sm">{error}</div>}
           <div className="space-y-2">
             <Label htmlFor="register-name">Name</Label>
             <Input
@@ -35,16 +56,6 @@ export default function RegisterForm() {
               placeholder="Enter your name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="register-username">Username</Label>
-            <Input
-              id="register-username"
-              type="text"
-              placeholder="Enter your username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
             />
           </div>
           <div className="space-y-2">
