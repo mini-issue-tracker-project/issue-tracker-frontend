@@ -19,7 +19,7 @@ interface ConfirmDialogProps {
   variant?: "default" | "destructive";
 }
 
-export default function ConfirmDialog({
+export function ConfirmDialog({
   open,
   onOpenChange,
   title,
