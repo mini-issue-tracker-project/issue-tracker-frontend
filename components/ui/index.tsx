@@ -1,7 +1,7 @@
-export { Button, buttonVariants } from './Button';
-export { Textarea } from './Textarea';
-export { Input } from './Input';
-export { Label } from './Label';
+export { Button, buttonVariants } from './button';
+export { Textarea } from './textarea';
+export { Input } from './input';
+export { Label } from './label';
 export { 
   Dialog, 
   DialogContent, 
@@ -10,5 +10,5 @@ export {
   DialogDescription,
   DialogFooter,
   DialogTrigger
-} from './Dialog';
+} from './dialog';
 export { ConfirmDialog } from './ConfirmDialog'; 

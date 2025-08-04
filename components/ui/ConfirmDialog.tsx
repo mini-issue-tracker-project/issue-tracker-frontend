@@ -5,8 +5,8 @@ import {
   DialogTitle, 
   DialogDescription,
   DialogFooter 
-} from "./Dialog";
-import { Button } from "./Button";
+} from "./dialog";
+import { Button } from "./button";
 
 interface ConfirmDialogProps {
   open: boolean;
