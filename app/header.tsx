@@ -43,7 +43,7 @@ export default function Header() {
       {user ? (
         <div className="relative" ref={dropdownRef}>
           <Button
-            className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 text-sm"
+            className="px-4 py-2 bg-blue-500 rounded hover:bg-blue-300 text-sm"
             onClick={() => setShowProfileDropdown(!showProfileDropdown)}
           >
             {user.name}
