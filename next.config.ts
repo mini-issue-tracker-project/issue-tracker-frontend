@@ -1,5 +1,4 @@
 import type { NextConfig } from "next";
-import path from "path";
 
 const backendUrl = process.env.VITE_API_URL || process.env.NEXT_PUBLIC_API_URL;
 
@@ -16,16 +15,6 @@ const nextConfig: NextConfig = {
     }
     // Return empty array if no backend URL is configured
     return [];
-  },
-  webpack: (config) => {
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      '@': path.resolve(__dirname, './'),
-    };
-    return config;
-  },
-  experimental: {
-    esmExternals: 'loose'
   }
 };
 
