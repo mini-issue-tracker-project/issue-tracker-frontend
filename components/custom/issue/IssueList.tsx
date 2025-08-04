@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/Button"
+import { Button } from "@/components/ui"
 import { Comment, Issue, Tag } from "@/lib/types"
 import AddIssueForm from './AddIssueForm'
 import { IssueFilters } from "./IssueFilters"
@@ -11,7 +11,7 @@ import Link from "next/link"
 import { fetchWithAuth } from "@/app/utils/api";
 import { useAuth } from "@/app/context/AuthContext";
 import { useRouter, useSearchParams } from "next/navigation"
-import ConfirmDialog from "@/components/ui/ConfirmDialog"
+import { ConfirmDialog } from "@/components/ui"
 import TagChip from "./TagChip"
 
 const PAGE_SIZE = 5;

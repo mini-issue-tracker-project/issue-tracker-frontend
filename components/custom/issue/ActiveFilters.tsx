@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter, useSearchParams } from "next/navigation"
-import { Button } from "@/components/ui/Button"
+import { Button } from "@/components/ui"
 import { X, FilterX } from "lucide-react"
 import { useEffect, useState } from "react"
 import { Tag } from "@/lib/types"

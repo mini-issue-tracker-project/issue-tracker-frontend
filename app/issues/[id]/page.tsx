@@ -2,14 +2,12 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/Button";
+import { Button, Textarea, ConfirmDialog } from "@/components/ui";
 import Link from "next/link";
 import CommentSectionWrapper from "@/components/custom/comments/CommentSectionWrapper";
 import { Issue, Tag } from "@/lib/types";
 import { useAuth } from "@/app/context/AuthContext";
 import { fetchWithAuth } from "@/app/utils/api";
-import { Textarea } from "@/components/ui/Textarea";
-import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import TagChip from "@/components/custom/issue/TagChip";
 
 export default function IssueDetailPage() {

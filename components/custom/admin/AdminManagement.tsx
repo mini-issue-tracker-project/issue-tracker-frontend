@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui";
 import TagsManagement from "./TagsManagement";
 import StatusesManagement from "./StatusesManagement";
 import PrioritiesManagement from "./PrioritiesManagement";

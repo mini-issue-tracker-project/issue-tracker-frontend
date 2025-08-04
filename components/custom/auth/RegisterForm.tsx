@@ -2,10 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/Button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/Dialog";
-import { Input } from "@/components/ui/Input";
-import { Label } from "@/components/ui/Label";
+import { Button, Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Input, Label } from "@/components/ui";
 import { useAuth } from "@/app/context/AuthContext";
 
 export default function RegisterForm() {

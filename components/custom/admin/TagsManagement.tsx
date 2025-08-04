@@ -2,10 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { fetchWithAuth } from "@/app/utils/api";
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
-import { Label } from "@/components/ui/Label";
-import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import { Button, Input, Label, ConfirmDialog } from "@/components/ui";
 
 interface Tag {
   id: number;

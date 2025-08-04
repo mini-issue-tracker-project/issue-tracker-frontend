@@ -4,10 +4,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useRouter, useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { fetchWithAuth } from "../../utils/api";
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
-import { Label } from "@/components/ui/Label";
-import { Textarea } from "@/components/ui/Textarea";
+import { Button, Input, Label, Textarea } from "@/components/ui";
 import AdminManagement from "@/components/custom/admin/AdminManagement";
 
 interface UserProfile {

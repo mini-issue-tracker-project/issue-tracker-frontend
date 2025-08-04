@@ -2,10 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/Dialog";
-import { Label } from "@/components/ui/Label";
-import { Input } from "@/components/ui/Input";
-import { Button } from "@/components/ui/Button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Label, Input, Button } from "@/components/ui";
 import { useAuth } from "@/app/context/AuthContext";
 
 export default function LoginForm() {

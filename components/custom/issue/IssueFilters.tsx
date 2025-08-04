@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Button } from "@/components/ui/Button"
+import { Button } from "@/components/ui"
 import { Tag } from "@/lib/types"
 import { useRouter, useSearchParams } from "next/navigation"
 import TagChip from "./TagChip"

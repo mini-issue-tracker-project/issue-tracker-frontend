@@ -1,14 +1,11 @@
 import { useState, useEffect } from "react";
-import { Textarea } from "@/components/ui/Textarea";
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
-import { Label } from "@/components/ui/Label";
+import { Textarea, Button, Input, Label } from "@/components/ui";
 import { fetchWithAuth } from "@/app/utils/api";
 import { useAuth } from "@/app/context/AuthContext";
 import { Comment } from "@/lib/types";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Filter } from "lucide-react";
-import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import { ConfirmDialog } from "@/components/ui";
 
 interface CommentsData {
   data: Comment[];
