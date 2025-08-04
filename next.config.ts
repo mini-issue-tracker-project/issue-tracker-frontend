@@ -1,17 +1,17 @@
 import type { NextConfig } from "next";
 
+const backendUrl = process.env.VITE_API_URL || process.env.NEXT_PUBLIC_API_URL;
+
 const nextConfig: NextConfig = {
-  env: {
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
-  },
   async rewrites() {
     return [
       {
         source: '/api/:path*',
-        destination: `${process.env.NEXT_PUBLIC_API_URL}/api/:path*`,
-      },
+        destination: `${backendUrl}/api/:path*`
+      }
     ];
-  },
+  }
 };
+
 
 export default nextConfig;
