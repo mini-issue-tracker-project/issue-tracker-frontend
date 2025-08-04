@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Label, Input, Button } from "@/components/ui";
-import { useAuth } from "@/app/context/AuthContext";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Label, Input, Button } from "../../ui";
+import { useAuth } from "../../../app/context/AuthContext";
 
 export default function LoginForm() {
   const [email, setEmail] = useState("");

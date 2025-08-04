@@ -1,11 +1,11 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Button } from "@/components/ui"
-import { Tag } from "@/lib/types"
+import { Button } from "../../ui"
+import { Tag } from "../../../lib/types"
 import { useRouter, useSearchParams } from "next/navigation"
 import TagChip from "./TagChip"
-import { fetchWithAuth } from "@/app/utils/api"
+import { fetchWithAuth } from "../../../app/utils/api"
 
 export function IssueFilters({ onFilterApply }: { onFilterApply: () => void }) {
   const router = useRouter();

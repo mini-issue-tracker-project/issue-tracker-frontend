@@ -4,8 +4,8 @@ import { useAuth } from "../../context/AuthContext";
 import { useRouter, useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { fetchWithAuth } from "../../utils/api";
-import { Button, Input, Label, Textarea } from "@/components/ui";
-import AdminManagement from "@/components/custom/admin/AdminManagement";
+import { Button, Input, Label } from "../../../components/ui";
+import AdminManagement from "../../../components/custom/admin/AdminManagement";
 
 interface UserProfile {
   id: number;

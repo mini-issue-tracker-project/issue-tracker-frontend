@@ -1,9 +1,9 @@
 "use client";
 
-import LoginForm from "@/components/custom/auth/LoginForm"
-import IssueListWrapper from "@/components/custom/issue/IssueListWrapper"
-import RegisterForm from "@/components/custom/auth/RegisterForm";
-import { useAuth } from "@/app/context/AuthContext"
+import LoginForm from "../components/custom/auth/LoginForm"
+import IssueListWrapper from "../components/custom/issue/IssueListWrapper"
+import RegisterForm from "../components/custom/auth/RegisterForm";
+import { useAuth } from "./context/AuthContext"
 
 export default function Home() {
   const { user } = useAuth()

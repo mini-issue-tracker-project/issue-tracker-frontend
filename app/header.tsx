@@ -1,9 +1,9 @@
 "use client";
 import { useAuth } from "./context/AuthContext";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui";
-import LoginForm from "@/components/custom/auth/LoginForm"
-import RegisterForm from "@/components/custom/auth/RegisterForm"
+import { Button } from "../components/ui";
+import LoginForm from "../components/custom/auth/LoginForm"
+import RegisterForm from "../components/custom/auth/RegisterForm"
 import { useState, useEffect, useRef } from "react";
 
 export default function Header() {

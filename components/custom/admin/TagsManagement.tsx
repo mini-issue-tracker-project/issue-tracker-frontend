@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { fetchWithAuth } from "@/app/utils/api";
-import { Button, Input, Label, ConfirmDialog } from "@/components/ui";
+import { fetchWithAuth } from "../../../app/utils/api";
+import { Button, Input, Label, ConfirmDialog } from "../../ui";
 
 interface Tag {
   id: number;

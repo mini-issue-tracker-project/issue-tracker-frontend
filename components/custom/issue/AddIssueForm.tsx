@@ -1,9 +1,9 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Button } from "@/components/ui"
-import { Issue, Tag } from "@/lib/types"
-import { fetchWithAuth } from "@/app/utils/api";
+import { Button } from "../../ui"
+import { Issue, Tag } from "../../../lib/types"
+import { fetchWithAuth } from "../../../app/utils/api";
 import TagChip from "./TagChip"
 
 export default function AddIssueForm({ onAdd }: { onAdd: (issue: Issue) => void }) {

@@ -1,11 +1,11 @@
 "use client"
 
 import { useRouter, useSearchParams } from "next/navigation"
-import { Button } from "@/components/ui"
+import { Button } from "../../ui"
 import { X, FilterX } from "lucide-react"
 import { useEffect, useState } from "react"
-import { Tag } from "@/lib/types"
-import { fetchWithAuth } from "@/app/utils/api"
+import { Tag } from "../../../lib/types"
+import { fetchWithAuth } from "../../../app/utils/api"
 
 type ActiveFilter = {
   key: string

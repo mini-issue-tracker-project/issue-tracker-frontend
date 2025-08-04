@@ -1,6 +1,6 @@
 "use client"
 
-import { Tag } from "@/lib/types"
+import { Tag } from "../../../lib/types"
 
 interface TagChipProps {
   tag: Tag
