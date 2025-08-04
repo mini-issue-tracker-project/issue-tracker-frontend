@@ -1,7 +1,7 @@
 "use client";
 
 import LoginForm from "@/components/custom/auth/LoginForm"
-import { IssueList } from "@/components/custom/issue/IssueList"
+import IssueListWrapper from "@/components/custom/issue/IssueListWrapper"
 import RegisterForm from "@/components/custom/auth/RegisterForm";
 import { useAuth } from "@/app/context/AuthContext"
 
@@ -12,7 +12,7 @@ export default function Home() {
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Issue List</h1>
       </div> 
-      <IssueList />
+      <IssueListWrapper />
     </main>
   )
 }

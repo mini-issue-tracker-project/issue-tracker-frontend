@@ -4,7 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 import Link from "next/link";
-import CommentSection from "@/components/custom/comments/CommentSection";
+import CommentSectionWrapper from "@/components/custom/comments/CommentSectionWrapper";
 import { Issue, Tag } from "@/lib/types";
 import { useAuth } from "@/app/context/AuthContext";
 import { fetchWithAuth } from "@/app/utils/api";
@@ -302,7 +302,7 @@ export default function IssueDetailPage() {
         </>
       )}
       
-      <CommentSection issueId={issueId} />
+      <CommentSectionWrapper issueId={issueId} />
 
       {/* Delete Confirmation Dialog */}
       <ConfirmDialog
