@@ -23,6 +23,9 @@ const nextConfig: NextConfig = {
       '@': path.resolve(__dirname, './'),
     };
     return config;
+  },
+  experimental: {
+    esmExternals: 'loose'
   }
 };
 
