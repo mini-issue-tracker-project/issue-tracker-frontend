@@ -1,21 +1,7 @@
 import type { NextConfig } from "next";
 
-const backendUrl = process.env.VITE_API_URL || process.env.NEXT_PUBLIC_API_URL;
-
 const nextConfig: NextConfig = {
-  async rewrites() {
-    // Only add the external rewrite if backendUrl is defined
-    if (backendUrl) {
-      return [
-        {
-          source: '/api/:path*',
-          destination: `${backendUrl}/api/:path*`
-        }
-      ];
-    }
-    // Return empty array if no backend URL is configured
-    return [];
-  }
+  // No rewrites - frontend will call backend directly using NEXT_PUBLIC_API_URL
 };
 
 export default nextConfig;

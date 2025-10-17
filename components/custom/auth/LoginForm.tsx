@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Label, Input, Button } from "../../ui";
 import { useAuth } from "../../../app/context/AuthContext";
+import { apiFetch } from "../../../app/utils/api";
 
 export default function LoginForm() {
   const [email, setEmail] = useState("");
@@ -15,9 +16,8 @@ export default function LoginForm() {
   const handleLogin = async () => {
     setError("");
     try {
-      const res = await fetch("/api/login", {
+      const res = await apiFetch("/api/login", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
       if (!res.ok) {

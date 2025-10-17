@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Input, Label } from "../../ui";
 import { useAuth } from "../../../app/context/AuthContext";
+import { apiFetch } from "../../../app/utils/api";
 
 export default function RegisterForm() {
   const [email, setEmail] = useState("");
@@ -16,9 +17,8 @@ export default function RegisterForm() {
   const handleRegister = async () => {
     setError("");
     try {
-      const res = await fetch("/api/register", {
+      const res = await apiFetch("/api/register", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, password }),
       });
       if (!res.ok) {
